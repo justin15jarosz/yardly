@@ -1,6 +1,6 @@
 Responsibilities:
 
-- Authentication & authorization (role-based: homeowner, business, admin)
+- User Registration
 - User profile management (customers and businesses)
 - Password reset, email verification
 
