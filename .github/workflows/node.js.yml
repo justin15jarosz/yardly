@@ -1,29 +1,68 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
-name: Node.js CI
+name: User Service Tests
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main, develop ]
+    paths:
+      - 'yardly/backend/user-service/**'
+      - '.github/workflows/node.js.yml'
   pull_request:
-    branches: [ "main" ]
+    branches: [ main, develop ]
+    paths:
+      - 'yardly/backend/user-service/**'
+      - '.github/workflows/node.js.yml'
 
 jobs:
   test:
     runs-on: ubuntu-latest
-
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - name: Change to User Service directory
-        run: cd ${{ env.WORK_DIR }}/local_checkout/backend/user-service
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
-          cache: "npm"
-      - name: User-Service Test
-        run: |
-          npm ci
-          npm test
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: yardly/backend/user-service/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: ./yardly/backend/user-service
+      run: npm ci
+    
+    - name: Run linter (if available)
+      working-directory: ./yardly/backend/user-service
+      run: |
+        if npm run lint --silent 2>/dev/null; then
+          npm run lint
+        else
+          echo "No linter script found, skipping..."
+        fi
+      continue-on-error: false
+    
+    - name: Run unit tests
+      working-directory: ./yardly/backend/user-service
+      run: npm test
+    
+    - name: Run test coverage (if available)
+      working-directory: ./yardly/backend/user-service
+      run: |
+        if npm run test:coverage --silent 2>/dev/null; then
+          npm run test:coverage
+        else
+          echo "No coverage script found, skipping..."
+        fi
+      continue-on-error: true
+    
+    - name: Upload coverage reports (if coverage exists)
+      if: matrix.node-version == '20.x'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./yardly/backend/user-service/coverage/lcov.info
+        directory: ./yardly/backend/user-service/coverage/
+        fail_ci_if_error: false
