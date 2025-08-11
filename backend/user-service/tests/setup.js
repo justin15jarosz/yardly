@@ -1,29 +1,3 @@
-import db from "../src/config/database.js";
-
-// Global test setup
-beforeAll(async () => {
-  // Set test environment
-  process.env.NODE_ENV = "test";
-  process.env.DB_NAME = "yardly";
-
-  // Initialize test database
-  try {
-    await db.initTables();
-  } catch (error) {
-    console.error("Test setup failed:", error);
-    throw error; // Let Jest handle the error
-  }
-});
-
-// Global test teardown
-afterAll(async () => {
-  try {
-    await db.close();
-  } catch (error) {
-    console.error("Test teardown failed:", error);
-  }
-});
-
 // Increase timeout for integration tests
 jest.setTimeout(15000);
 
