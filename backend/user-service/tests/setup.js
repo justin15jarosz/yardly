@@ -1,3 +1,15 @@
+import db from "../src/config/database.js";
+
+// Global test setup
+beforeAll(async () => {
+  // Set test environment
+  process.env.NODE_ENV = "test";
+  process.env.DB_NAME = "yardly";
+});
+
+// Global test teardown
+afterAll(async () => {});
+
 // Increase timeout for integration tests
 jest.setTimeout(15000);
 
