@@ -30,11 +30,11 @@ jobs:
         node-version: ${{ matrix.node-version }}
     
     - name: Install dependencies
-      working-directory: ./yardly/backend/user-service
+      working-directory: backend/user-service
       run: npm ci
     
     - name: Run linter (if available)
-      working-directory: ./yardly/backend/user-service
+      working-directory: backend/user-service
       run: |
         if npm run lint --silent 2>/dev/null; then
           npm run lint
@@ -44,11 +44,11 @@ jobs:
       continue-on-error: false
     
     - name: Run unit tests
-      working-directory: ./yardly/backend/user-service
+      working-directory: backend/user-service
       run: npm test
     
     - name: Run test coverage (if available)
-      working-directory: ./yardly/backend/user-service
+      working-directory: backend/user-service
       run: |
         if npm run test:coverage --silent 2>/dev/null; then
           npm run test:coverage
@@ -61,6 +61,6 @@ jobs:
       if: matrix.node-version == '20.x'
       uses: codecov/codecov-action@v3
       with:
-        file: ./yardly/backend/user-service/coverage/lcov.info
-        directory: ./yardly/backend/user-service/coverage/
+        file: backend/user-service/coverage/lcov.info
+        directory: backend/user-service/coverage/
         fail_ci_if_error: false
