@@ -17,7 +17,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
       - name: Change to User Service directory
-        working-directory: ${{ env.WORK_DIR }}/local_checkout/backend/user-service
+        run: cd ${{ env.WORK_DIR }}/local_checkout/backend/user-service
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
