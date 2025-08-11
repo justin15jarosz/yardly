@@ -13,14 +13,19 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - run: cd ./backend/user-service
+      - name: checkout repo
+        uses: actions/checkout@v4
+      - name: Change to User Service directory
+        run: cd ./backend/user-service
       - name: Lint Code
         run: npm run lint
   test:
     runs-on: ubuntu-latest
     steps:
-    - run: cd ./backend/user-service
-    - uses: actions/checkout@v4
+    - name: checkout repo
+      uses: actions/checkout@v4
+    - name: Change to User Service directory
+      run: cd ./backend/user-service
     - name: Use Node.js
       uses: actions/setup-node@v4
       with:
