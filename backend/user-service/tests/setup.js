@@ -11,7 +11,7 @@ beforeAll(async () => {
     await db.initTables();
   } catch (error) {
     console.error("Test setup failed:", error);
-    process.exit(1);
+    throw error; // Let Jest handle the error
   }
 });
 
