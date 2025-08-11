@@ -10,20 +10,25 @@ WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'yardly')\gexec
 -- This is a psql meta-command.
 \c yardly
 
--- Enable PostGIS extension if not already enabled
-CREATE EXTENSION IF NOT EXISTS postgis;
+-- Enable uuid-ossp extension if not already enabled
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Create the lawns table
-CREATE TABLE IF NOT EXISTS lawns (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  area GEOMETRY(POLYGON, 4326) NOT NULL,
-  "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- Create the Users table
+CREATE TABLE IF NOT EXISTS "Users" (
+  "UserId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  "Email" VARCHAR(255) NOT NULL UNIQUE,
+  "Password" VARCHAR(255) NOT NULL,
+  "Name" VARCHAR(255) NOT NULL,
+  "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  "IsVerified" BOOLEAN NOT NULL DEFAULT FALSE
 );
 
--- Insert some dummy data
-INSERT INTO lawns (name, area) VALUES
-('Front Yard', ST_GeomFromText('POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))', 4326)),
-('Back Yard', ST_GeomFromText('POLYGON((20 20, 30 20, 30 30, 20 30, 20 20))', 4326)),
-('Side Garden', ST_GeomFromText('POLYGON((5 15, 15 15, 15 25, 5 25, 5 15))', 4326));
+-- Create the Lawns table
+CREATE TABLE IF NOT EXISTS "lawns" (
+  "LawnId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  "name" VARCHAR(255) NOT NULL,
+  "area" GEOMETRY(POLYGON, 4326) NOT NULL,
+  "UserId" UUID NOT NULL,
+  "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  FOREIGN KEY ("UserId") REFERENCES "Users"("UserId") ON DELETE CASCADE
+);
