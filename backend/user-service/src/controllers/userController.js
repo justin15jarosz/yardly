@@ -1,15 +1,7 @@
 import UserRepository from "../repository/userRepository.js";
+import { publishMessage, TOPICS } from "../config/kafka.js";
+import { generateOTP, generateOTPToken } from "../util/generateToken.js";
 
-export const createUser = async (req, res) => {
-  try {
-    console.log("Request Body:", req.body);
-    const { Email, Password, Name } = req.body;
-    const newUser = await User.create({ Email, Password, Name });
-    res.status(201).json(newUser);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
 class UserController {
   // Create new user
   async createUser(req, res) {
@@ -25,7 +17,24 @@ class UserController {
       }
 
       const user = await UserRepository.create({ email, name });
+      const otp = generateOTP();
+      const otpToken = generateOTPToken(email, otp);
 
+      // Prepare message for Kafka
+      const kafkaMessage = {
+        user_id: user.user_id,
+        email: user.email,
+        name: user.name,
+        otp,
+        otpToken,
+        timestamp: new Date().toISOString(),
+        websiteUrl: process.env.WEBSITE_URL || "http://localhost:3001",
+      };
+
+      // Publish to Kafka
+      await publishMessage(TOPICS.USER_REGISTRATIONS, kafkaMessage);
+
+      console.log(`📝 User registered: ${email}, OTP: ${otp}`);
       res.status(201).json({
         message: "User created successfully",
         user,

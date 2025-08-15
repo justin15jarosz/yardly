@@ -1,4 +1,4 @@
-const crypto = require("crypto");
+import crypto from "crypto";
 
 // Generate OTP
 export function generateOTP() {

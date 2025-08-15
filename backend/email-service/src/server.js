@@ -1,3 +1,4 @@
+import dotenv from "dotenv";
 import express from "express";
 import nodemailer from "nodemailer";
 import { connectConsumer, disconnect } from "./config/kafka.js";
@@ -5,6 +6,7 @@ import { consumeMessages } from "./util/consumeMessage.js";
 
 const app = express();
 const PORT = 3002;
+dotenv.config();
 
 // Email configuration
 export const emailConfig = {
@@ -12,8 +14,8 @@ export const emailConfig = {
   port: process.env.SMTP_PORT || 587,
   secure: false,
   auth: {
-    user: process.env.EMAIL_USER || "your-email@gmail.com",
-    pass: process.env.EMAIL_PASS || "your-app-password",
+    user: process.env.EMAIL_USER || "",
+    pass: process.env.EMAIL_PASS || "",
   },
 };
 
