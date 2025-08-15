@@ -1,5 +1,7 @@
 import { consumer } from "../config/kafka.js";
 import { sendOTPEmail } from "../sendEmail.js";
+import { cacheManager } from "../server.js";
+import { generateOTP, generateOTPToken } from "./generateToken.js";
 
 // Kafka message consumer
 export async function consumeMessages() {
@@ -16,15 +18,34 @@ export async function consumeMessages() {
           });
 
           // Extract user data
-          const { userId, email, name, otp, otpToken, websiteUrl } =
-            messageData;
+          const { userId, email, name, purpose, websiteUrl } = messageData;
 
-          if (!email || !name || !otp || !otpToken) {
+          if (!email || !name || !purpose) {
             console.error(
               "❌ Invalid message format - missing required fields"
             );
             return;
           }
+          // Have to refactor in the future utilizing purpose from message
+          const otp = generateOTP();
+          const otpToken = generateOTPToken(email, otp);
+
+          // Store OTP in shared cache
+          const cacheKey = `otp_${purpose}_${email}`;
+          await cacheManager.set(
+            cacheKey,
+            {
+              otp,
+              email,
+              purpose,
+              timestamp: Date.now(),
+              attempts: 0,
+            },
+            600
+          ); // 10 minutes TTL
+          console.log(
+            `🔐 Stored OTP in cache with key: ${cacheKey} , value: ${otp}`
+          );
 
           // Send OTP email
           const emailResult = await sendOTPEmail(

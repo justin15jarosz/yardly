@@ -36,7 +36,7 @@ function generateOTPEmail(name, otp, otpToken, websiteUrl) {
                 <div class="otp-box">
                     <p><strong>Your OTP Code:</strong></p>
                     <div class="otp-code">${otp}</div>
-                    <p><em>This code will expire in 15 minutes</em></p>
+                    <p><em>This code will expire in 10 minutes</em></p>
                 </div>
                 
                 <p>You can also click the button below to verify directly:</p>
@@ -75,10 +75,10 @@ Your OTP Code: ${otp}
 
 You can also verify by visiting: ${verifyUrl}
 
-This OTP will expire in 15 minutes.
+This OTP will expire in 10 minutes.
 
 Security Note:
-- This OTP is valid for 15 minutes only
+- This OTP is valid for 10 minutes only
 - Don't share this code with anyone
 - If you didn't request this verification, please ignore this email
 
@@ -93,7 +93,7 @@ export async function sendOTPEmail(userEmail, name, otp, otpToken, websiteUrl) {
     const emailContent = generateOTPEmail(name, otp, otpToken, websiteUrl);
 
     const mailOptions = {
-      from: `"Your App Name" <${emailConfig.auth.user}>`,
+      from: `"Yardly" <${emailConfig.auth.user}>`,
       to: userEmail,
       subject: emailContent.subject,
       html: emailContent.html,
