@@ -9,4 +9,7 @@ router.use(requestLogger);
 // POST create new user (register)
 router.post("/", validateUser, userController.createUser);
 
+// Verify OTP and complete registration
+router.post("/register/finalize", userController.finalizeRegistration);
+
 export default router;

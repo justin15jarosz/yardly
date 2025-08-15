@@ -1,6 +1,6 @@
 import UserRepository from "../repository/userRepository.js";
 import { publishMessage, TOPICS } from "../config/kafka.js";
-import { generateOTP, generateOTPToken } from "../util/generateToken.js";
+import { cacheManager } from "../server.js";
 
 class UserController {
   // Create new user
@@ -17,16 +17,13 @@ class UserController {
       }
 
       const user = await UserRepository.create({ email, name });
-      const otp = generateOTP();
-      const otpToken = generateOTPToken(email, otp);
 
       // Prepare message for Kafka
       const kafkaMessage = {
         user_id: user.user_id,
         email: user.email,
         name: user.name,
-        otp,
-        otpToken,
+        purpose: "registration",
         timestamp: new Date().toISOString(),
         websiteUrl: process.env.WEBSITE_URL || "http://localhost:3001",
       };
@@ -34,7 +31,7 @@ class UserController {
       // Publish to Kafka
       await publishMessage(TOPICS.USER_REGISTRATIONS, kafkaMessage);
 
-      console.log(`📝 User registered: ${email}, OTP: ${otp}`);
+      console.log(`📝 User registered: ${email}`);
       res.status(201).json({
         message: "User created successfully",
         user,
@@ -56,6 +53,15 @@ class UserController {
 
       res.status(500).json({ error: "Internal server error" });
     }
+  }
+  // Create new user
+  async finalizeRegistration(req, res) {
+    const { email, otp, password } = req.body;
+    const cacheKey = `otp_registration_${email}`;
+    cacheManager.get(cacheKey).then((value) => {
+      console.log("Retrieved from cache:", value);
+    });
+    res.status(201).json({ message: "Finalize registration endpoint hit" });
   }
 }
 
