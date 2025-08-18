@@ -1,8 +1,7 @@
 import { jest } from "@jest/globals";
 import UserService from "../../src/service/userService.js";
 import UserController from "../../src/controllers/userController.js";
-import SpecializedException from "../../src/exception/specializedException.js";
-import { cacheManager } from "../../src/server.js";
+import { ConflictException } from "../../src/exception/specializedException.js";
 
 jest.mock("../../src/service/userService.js");
 jest.mock("../../src/server.js", () => ({
@@ -41,7 +40,7 @@ describe("UserController", () => {
 
     it("should handle email already registered", async () => {
       mockReq.body = { email: "fail@example.com", name: "Failing User" };
-      const error = new SpecializedException.ConflictException(`User with this email already exists: ${mockReq.body.email}`);
+      const error = new ConflictException(`User with this email already exists: ${mockReq.body.email}`);
       UserService.createUser.mockRejectedValue(error);
 
       await UserController.intializeRegistration(mockReq, mockRes);
@@ -66,62 +65,42 @@ describe("UserController", () => {
   });
 
   describe("finalizeRegistration", () => {
-    it("should finalize user registration successfully", async () => {
-      const mockReq = {
-        body: {
-          email: "test@example.com",
-          otp: "123456",
-          password: "securePassword123",
-        },
-      };
-      const mockRes = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
-      };
-
-      // Mock successful call
-      UserService.finalizeRegistration = jest.fn().mockResolvedValue();
+    it('should respond with 201 on successful registration', async () => {
+      mockReq.body = {
+        email: 'test@example.com',
+        otp: '123456',
+        password: 'securePassword'
+      }
+      UserService.finalizeRegistration.mockResolvedValue();
 
       await UserController.finalizeRegistration(mockReq, mockRes);
 
       expect(UserService.finalizeRegistration).toHaveBeenCalledWith(
-        "test@example.com",
-        "123456",
-        "securePassword123"
+        mockReq.body.email, mockReq.body.otp, mockReq.body.password
       );
       expect(mockRes.status).toHaveBeenCalledWith(201);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        message: "User registration finalized",
-      });
+      expect(mockRes.json).toHaveBeenCalledWith({ message: 'User registration finalized' });
     });
 
-    it("should handle errors from UserService.finalizeRegistration", async () => {
-      const mockReq = {
-        body: {
-          email: "test@example.com",
-          otp: "wrongotp",
-          password: "securePassword123",
-        },
-      };
-      const mockRes = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
-      };
-
-      const error = new Error("Invalid OTP");
-      UserService.finalizeRegistration = jest.fn().mockRejectedValue(error);
+    it('should respond with error message and statusCode from error', async () => {
+      const error = new Error('Invalid OTP');
+      error.statusCode = 400;
+      UserService.finalizeRegistration.mockRejectedValue(error);
 
       await UserController.finalizeRegistration(mockReq, mockRes);
 
-      expect(UserService.finalizeRegistration).toHaveBeenCalledWith(
-        "test@example.com",
-        "wrongotp",
-        "securePassword123"
-      );
-      expect(mockRes.status).toHaveBeenCalledWith(500);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        error: "Internal server error",
-      });
+      expect(mockRes.status).toHaveBeenCalledWith(400);
+      expect(mockRes.json).toHaveBeenCalledWith({ error: 'Invalid OTP' });
+    });
+
+    it('should handle errors without statusCode gracefully', async () => {
+      const error = new Error('Unknown error');
+      UserService.finalizeRegistration.mockRejectedValue(error);
+
+      await UserController.finalizeRegistration(mockReq, mockRes);
+
+      expect(mockRes.status).toHaveBeenCalledWith(undefined);
+      expect(mockRes.json).toHaveBeenCalledWith({ error: 'Unknown error' });
     });
   });
 });

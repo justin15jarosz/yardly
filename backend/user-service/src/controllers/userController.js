@@ -1,4 +1,3 @@
-import { cacheManager } from "../server.js";
 import UserService from "../service/userService.js";
 import BaseException from "../exception/baseException.js";
 
@@ -26,7 +25,7 @@ class UserController {
       }
     }
   }
-  // Create new user
+  // Finalize user registration
   async finalizeRegistration(req, res) {
     try {
       const { email, otp, password } = req.body;
@@ -34,8 +33,8 @@ class UserController {
       res.status(201).json({ message: "User registration finalized" });
     } catch (error) {
       console.error("Error in finalizeRegistration:", error);
-      res.status(500).json({
-        error: "Internal server error",
+      res.status(error.statusCode).json({
+        error: error.message
       });
     }
   }

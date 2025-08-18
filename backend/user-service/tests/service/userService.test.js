@@ -3,7 +3,7 @@ import UserRepository from '../../src/repository/userRepository.js';
 import { publishMessage, TOPICS } from '../../src/config/kafka.js';
 import { cacheManager } from '../../src/server.js';
 import ExceptionFactory from '../../src/exception/exceptionFactory.js';
-import SpecializedException from '../../src/exception/specializedException.js';
+import { ConflictException } from '../../src/exception/specializedException.js';
 import BaseException from '../../src/exception/baseException.js';
 
 jest.mock('../../src/repository/userRepository.js');
@@ -33,7 +33,7 @@ describe('UserService', () => {
             expect(UserRepository.findByEmail).toHaveBeenCalledWith(email);
             expect(ExceptionFactory.throwIf).toHaveBeenCalledWith(
                 null,
-                SpecializedException.ConflictException,
+                ConflictException,
                 `User with this email already exists: ${email}`
             );
             expect(UserRepository.create).toHaveBeenCalledWith({ email, name });
@@ -51,12 +51,12 @@ describe('UserService', () => {
             const existingUser = { user_id: '456', email, name };
 
             UserRepository.findByEmail.mockResolvedValue(existingUser);
-            const conflictError = new SpecializedException.ConflictException();
+            const conflictError = new ConflictException();
             ExceptionFactory.throwIf.mockImplementation(async () => {
                 throw conflictError;
             });
 
-            await expect(UserService.createUser(email, name)).rejects.toThrow(SpecializedException.ConflictException);
+            await expect(UserService.createUser(email, name)).rejects.toThrow(ConflictException);
             expect(UserRepository.findByEmail).toHaveBeenCalledWith(email);
             expect(ExceptionFactory.throwIf).toHaveBeenCalled();
         });
@@ -83,26 +83,70 @@ describe('UserService', () => {
         });
     });
 
-    describe('finalizeRegistration', () => {
-        it('should retrieve OTP from cache', async () => {
-            const email = 'test@example.com';
-            const otp = '123456';
-            const password = 'password123';
+  describe("finalizeRegistration", () => {
+    const email = 'test@example.com';
+    const otp = '654321';
+    const password = 'securePassword';
+    const cacheKey = `otp_registration_${email}`;
 
-            const mockValue = 'stored_otp';
+    it('should finalize registration with valid cached OTP', async () => {
+      cacheManager.get.mockResolvedValue(otp);
+      UserRepository.updatePassword.mockResolvedValue();
+      cacheManager.del.mockResolvedValue();
 
-            cacheManager.get.mockResolvedValue(mockValue);
+      await UserService.finalizeRegistration(email, otp, password);
 
-            const service = new UserService();
-
-            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-
-            await service.finalizeRegistration(email, otp, password);
-
-            expect(cacheManager.get).toHaveBeenCalledWith(`otp_registration_${email}`);
-            expect(consoleSpy).toHaveBeenCalledWith('Retrieved from cache:', mockValue);
-
-            consoleSpy.mockRestore();
-        });
+      expect(cacheManager.get).toHaveBeenCalledWith(cacheKey);
+      expect(UserRepository.updatePassword).toHaveBeenCalledWith(email, password);
+      expect(cacheManager.del).toHaveBeenCalledWith(cacheKey);
+      expect(ExceptionFactory.throwValidation).not.toHaveBeenCalled();
     });
+
+    it('should throw validation error for invalid OTP', async () => {
+      cacheManager.get.mockResolvedValue('wrong_otp');
+      ExceptionFactory.throwValidation.mockRejectedValue(new Error('Invalid OTP'));
+
+      await expect(
+        UserService.finalizeRegistration(email, 'wrong_input', password)
+      ).rejects.toThrow('Invalid OTP');
+
+      expect(cacheManager.get).toHaveBeenCalledWith(cacheKey);
+      expect(UserRepository.updatePassword).not.toHaveBeenCalled();
+      expect(cacheManager.del).not.toHaveBeenCalled();
+      expect(ExceptionFactory.throwValidation).toHaveBeenCalledWith(
+        'Invalid OTP', 'otp', 'wrong_input', { email }
+      );
+    });
+
+    it('should throw validation error if updatePassword fails', async () => {
+      cacheManager.get.mockResolvedValue(otp);
+      UserRepository.updatePassword.mockRejectedValue(new Error('DB error'));
+      ExceptionFactory.throwValidation.mockRejectedValue(new Error('Error updating password'));
+
+      await expect(
+        UserService.finalizeRegistration(email, otp, password)
+      ).rejects.toThrow('Error updating password');
+
+      expect(cacheManager.get).toHaveBeenCalledWith(cacheKey);
+      expect(UserRepository.updatePassword).toHaveBeenCalledWith(email, password);
+      expect(ExceptionFactory.throwValidation).toHaveBeenCalledWith(
+        'Error updating password', 'password', password, { email }
+      );
+      expect(cacheManager.del).not.toHaveBeenCalled();
+    });
+
+    it('should throw error if cacheManager.get fails', async () => {
+      const error = new Error('Redis down');
+      cacheManager.get.mockRejectedValue(error);
+
+      await expect(
+        UserService.finalizeRegistration(email, otp, password)
+      ).rejects.toThrow('Redis down');
+
+      expect(cacheManager.get).toHaveBeenCalledWith(cacheKey);
+      expect(UserRepository.updatePassword).not.toHaveBeenCalled();
+      expect(cacheManager.del).not.toHaveBeenCalled();
+      expect(ExceptionFactory.throwValidation).not.toHaveBeenCalled();
+    });
+  });
 });
