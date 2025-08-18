@@ -1,8 +1,14 @@
+import { ValidationException,
+    NotFoundException,
+    UnauthorizedException,
+    ForbiddenException,
+    ConflictException,
+    RateLimitException } from "../exception/specializedException.js";
 /**
  * Factory class for creating and throwing exceptions
  */
 class ExceptionFactory {
-    static async checkValidExcetionClass(ExceptionClass) {
+    static async checkValidExceptionClass(ExceptionClass) {
         if (ExceptionClass && typeof ExceptionClass === 'function') {
             return;
         } else {
@@ -11,12 +17,12 @@ class ExceptionFactory {
     }
 
     static async throw(ExceptionClass, ...args) {
-        await ExceptionFactory.checkValidExcetionClass(ExceptionClass);
+        await ExceptionFactory.checkValidExceptionClass(ExceptionClass);
         throw new ExceptionClass(...args);
     }
 
     static async throwIf(condition, ExceptionClass, ...args) {
-        await ExceptionFactory.checkValidExcetionClass(ExceptionClass);
+        await ExceptionFactory.checkValidExceptionClass(ExceptionClass);
 
         if (condition) {
             throw new ExceptionClass(...args);
@@ -24,7 +30,7 @@ class ExceptionFactory {
     }
 
     static async throwUnless(condition, ExceptionClass, ...args) {
-        await ExceptionFactory.checkValidExcetionClass(ExceptionClass);
+        await ExceptionFactory.checkValidExceptionClass(ExceptionClass);
 
         if (!condition) {
             throw new ExceptionClass(...args);
@@ -32,27 +38,27 @@ class ExceptionFactory {
     }
 
     // Convenience methods for common exceptions
-    static validation(message, field, value, additionalData) {
+    static async throwValidation(message, field, value, additionalData) {
         throw new ValidationException(message, field, value, additionalData);
     }
 
-    static notFound(resource, id, additionalData) {
+    static async throwNotFound(resource, id, additionalData) {
         throw new NotFoundException(resource, id, additionalData);
     }
 
-    static unauthorized(message, additionalData) {
+    static async throwUnauthorized(message, additionalData) {
         throw new UnauthorizedException(message, additionalData);
     }
 
-    static forbidden(message, additionalData) {
+    static async throwForbidden(message, additionalData) {
         throw new ForbiddenException(message, additionalData);
     }
 
-    static conflict(message, additionalData) {
+    static async throwConflict(message, additionalData) {
         throw new ConflictException(message, additionalData);
     }
 
-    static rateLimit(message, limit, additionalData) {
+    static async throwRateLimit(message, limit, additionalData) {
         throw new RateLimitException(message, limit, additionalData);
     }
 }

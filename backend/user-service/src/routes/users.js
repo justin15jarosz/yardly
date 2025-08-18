@@ -1,6 +1,6 @@
 import express from "express";
 import userController from "../controllers/userController.js";
-import { validateUser, requestLogger } from "../util/validateUser.js";
+import { validateUser, validatePassword, requestLogger } from "../util/validateUser.js";
 const router = express.Router();
 
 // Apply logging middleware to all routes
@@ -10,6 +10,6 @@ router.use(requestLogger);
 router.post("/register/initialize", validateUser, userController.intializeRegistration);
 
 // Verify OTP and complete registration
-router.post("/register/finalize", userController.finalizeRegistration);
+router.post("/register/finalize", validatePassword, userController.finalizeRegistration);
 
 export default router;

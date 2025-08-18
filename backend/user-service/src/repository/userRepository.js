@@ -25,9 +25,7 @@ class UserRepository {
   }
 
   // Update user password
-  static async updatePassword(data) {
-    const { email, password } = data;
-
+  static async updatePassword(email, password) {
     try {
       // Hash password
       const saltRounds = 12;
@@ -35,7 +33,8 @@ class UserRepository {
 
       const query = `
         UPDATE users
-        SET password = $1
+        SET password = $1,
+            is_verified = true
         WHERE email = $2
         RETURNING user_id, email, name, created_at, is_verified
       `;

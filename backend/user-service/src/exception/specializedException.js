@@ -2,7 +2,7 @@ import BaseException from "./baseException.js";
 /**
  * Validation Error - for input validation failures
  */
-class ValidationException extends BaseException {
+export class ValidationException extends BaseException {
     constructor(message, field = null, value = null, additionalData = {}) {
         super(message, 400, 'VALIDATION_ERROR', {
             field,
@@ -15,7 +15,7 @@ class ValidationException extends BaseException {
 /**
  * Not Found Error - for resource not found scenarios
  */
-class NotFoundException extends BaseException {
+export class NotFoundException extends BaseException {
     constructor(resource = 'Resource', id = null, additionalData = {}) {
         const message = id ? `${resource} with ID '${id}' not found` : `${resource} not found`;
         super(message, 404, 'NOT_FOUND', {
@@ -29,7 +29,7 @@ class NotFoundException extends BaseException {
 /**
  * Unauthorized Error - for authentication failures
  */
-class UnauthorizedException extends BaseException {
+export class UnauthorizedException extends BaseException {
     constructor(message = 'Authentication required', additionalData = {}) {
         super(message, 401, 'UNAUTHORIZED', additionalData);
     }
@@ -38,7 +38,7 @@ class UnauthorizedException extends BaseException {
 /**
  * Forbidden Error - for authorization failures
  */
-class ForbiddenException extends BaseException {
+export class ForbiddenException extends BaseException {
     constructor(message = 'Access forbidden', additionalData = {}) {
         super(message, 403, 'FORBIDDEN', {
             ...additionalData
@@ -49,7 +49,7 @@ class ForbiddenException extends BaseException {
 /**
  * Conflict Error - for resource conflicts
  */
-class ConflictException extends BaseException {
+export class ConflictException extends BaseException {
     constructor(message = 'Resource conflict', additionalData = {}) {
         super(message, 409, 'CONFLICT', {
             ...additionalData
@@ -60,7 +60,7 @@ class ConflictException extends BaseException {
 /**
  * Rate Limit Error - for rate limiting
  */
-class RateLimitException extends BaseException {
+export class RateLimitException extends BaseException {
     constructor(message = 'Rate limit exceeded', limit = null, additionalData = {}) {
         super(message, 429, 'RATE_LIMIT_EXCEEDED', {
             limit,
@@ -68,12 +68,3 @@ class RateLimitException extends BaseException {
         });
     }
 }
-
-export default {
-    ValidationException,
-    NotFoundException,
-    UnauthorizedException,
-    ForbiddenException,
-    ConflictException,
-    RateLimitException
-};
