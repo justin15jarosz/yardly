@@ -5,8 +5,11 @@ import bcrypt from "bcrypt";
 class UserRepository {
   // Create new user
   static async create(userData) {
-    const { email, name, is_verified = false } = userData;
+    const { email, name } = userData;
 
+    // Default is_verified to false for new users
+    const is_verified = false;
+    
     try {
       const query = `
         INSERT INTO users (email, name, is_verified)

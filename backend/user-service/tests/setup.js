@@ -8,7 +8,9 @@ beforeAll(async () => {
 });
 
 // Global test teardown
-afterAll(async () => {});
+afterAll(async () => {
+  await db.close()
+});
 
 // Increase timeout for integration tests
 jest.setTimeout(15000);

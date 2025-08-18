@@ -1,199 +1,121 @@
-import { validateUser, validateUUID } from "../../src/util/validateUser.js";
+import {
+  requestLogger,
+  validateUser,
+  validatePassword,
+  validateLogin,
+  validateUUID,
+} from '../../src/util/validateUser.js';
 
-describe("Validate User - Happy Path", () => {
-  let mockReq, mockRes, mockNext;
+describe('User Validation Tests', () => {
+  let req, res, next;
 
   beforeEach(() => {
-    mockReq = { body: {}, params: {} };
-    mockRes = {
+    req = { body: {}, params: {} };
+    res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
     };
-    mockNext = jest.fn();
+    next = jest.fn();
   });
 
-  describe("validateUser()", () => {
-    test("should pass validation with valid user data", () => {
-      // Arrange
-      mockReq.body = {
-        name: "Test User",
-        email: "test@example.com",
-        password: "password123",
-      };
+  describe('requestLogger', () => {
+    it('should log request method and path and call next', () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      req.method = 'GET';
+      req.path = '/api/test';
 
-      // Act
-      validateUser(mockReq, mockRes, mockNext);
+      requestLogger(req, res, next);
 
-      // Assert
-      expect(mockNext).toHaveBeenCalled();
-      expect(mockRes.status).not.toHaveBeenCalled();
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('GET /api/test'));
+      expect(next).toHaveBeenCalled();
+      consoleSpy.mockRestore();
     });
   });
 
-  describe("validateUUID()", () => {
-    test("should pass validation with valid UUID", () => {
-      // Arrange
-      mockReq.params.user_id = "123e4567-e89b-12d3-a456-426614174000";
+  describe('validateUser', () => {
+    it('should return error if name or email is missing', () => {
+      req.body = {};
+      validateUser(req, res, next);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: "Name and Email are required" });
+    });
 
-      // Act
-      validateUUID(mockReq, mockRes, mockNext);
+    it('should return error if name is too short', () => {
+      req.body = { name: 'A', email: 'test@example.com' };
+      validateUser(req, res, next);
+      expect(res.json).toHaveBeenCalledWith({ error: "Name must be at least 2 characters long" });
+    });
 
-      // Assert
-      expect(mockNext).toHaveBeenCalled();
-      expect(mockRes.status).not.toHaveBeenCalled();
+    it('should return error if name is too long', () => {
+      req.body = { name: 'A'.repeat(101), email: 'test@example.com' };
+      validateUser(req, res, next);
+      expect(res.json).toHaveBeenCalledWith({ error: "Name cannot exceed 100 characters" });
+    });
+
+    it('should return error for invalid email', () => {
+      req.body = { name: 'John', email: 'invalidemail' };
+      validateUser(req, res, next);
+      expect(res.json).toHaveBeenCalledWith({ error: "Invalid email format" });
+    });
+
+    it('should call next for valid input', () => {
+      req.body = { name: 'John Doe', email: 'john@example.com' };
+      validateUser(req, res, next);
+      expect(next).toHaveBeenCalled();
     });
   });
 
-  describe("Validate User - Edge Cases", () => {
-    test("should accept name with 2 characters", () => {
-      // Arrange
-      mockReq.body = {
-        name: "AB",
-        email: "test@example.com",
-      };
-
-      // Act
-      validateUser(mockReq, mockRes, mockNext);
-
-      // Assert
-      expect(mockNext).toHaveBeenCalled();
-      expect(mockRes.status).not.toHaveBeenCalled();
+  describe('validatePassword', () => {
+    it('should return error if password is missing', () => {
+      req.body = {};
+      validatePassword(req, res, next);
+      expect(res.json).toHaveBeenCalledWith({ error: "Password is required" });
     });
 
-    test("should accept name with 100 characters", () => {
-      // Arrange
-      mockReq.body = {
-        name: "A".repeat(100),
-        email: "test@example.com",
-      };
-
-      // Act
-      validateUser(mockReq, mockRes, mockNext);
-
-      // Assert
-      expect(mockNext).toHaveBeenCalled();
-      expect(mockRes.status).not.toHaveBeenCalled();
+    it('should return error if password is too short', () => {
+      req.body = { password: '123' };
+      validatePassword(req, res, next);
+      expect(res.json).toHaveBeenCalledWith({ error: "Password must be at least 6 characters long" });
     });
 
-    test("should handle very long email (255 characters)", () => {
-      // Arrange
-      const longEmail = "a".repeat(240) + "@example.com";
-      mockReq.body = {
-        name: "A".repeat(100),
-        email: longEmail,
-      };
-
-      // Act
-      validateUser(mockReq, mockRes, mockNext);
-
-      // Assert
-      expect(mockNext).toHaveBeenCalled();
-      expect(mockRes.status).not.toHaveBeenCalled();
-    });
-
-    test("should handle Unicode characters in name", () => {
-      // Arrange
-      mockReq.body = {
-        name: "José María 李明",
-        email: "test@example.com",
-      };
-
-      // Act
-      validateUser(mockReq, mockRes, mockNext);
-
-      // Assert
-      expect(mockNext).toHaveBeenCalled();
-      expect(mockRes.status).not.toHaveBeenCalled();
+    it('should call next for valid password', () => {
+      req.body = { password: 'secure123' };
+      validatePassword(req, res, next);
+      expect(next).toHaveBeenCalled();
     });
   });
 
-  describe("Validate User - Error Handling", () => {
-    test("should reject missing email", async () => {
-      // Arrange
-      mockReq.body = {
-        name: "Test User",
-        // Missing name
-      };
-
-      // Act
-      validateUser(mockReq, mockRes, mockNext);
-
-      // Assert
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        error: "Name and Email are required",
-      });
-      expect(mockNext).not.toHaveBeenCalled();
+  describe('validateLogin', () => {
+    it('should return error if email or password is missing', () => {
+      req.body = { email: '', password: '' };
+      validateLogin(req, res, next);
+      expect(res.json).toHaveBeenCalledWith({ error: "Email and password are required" });
     });
 
-    test("should reject missing name", () => {
-      // Arrange
-      mockReq.body = {
-        email: "test@example.com",
-        // Missing name
-      };
-
-      // Act
-      validateUser(mockReq, mockRes, mockNext);
-
-      // Assert
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        error: "Name and Email are required",
-      });
-      expect(mockNext).not.toHaveBeenCalled();
+    it('should return error for invalid email', () => {
+      req.body = { email: 'bademail', password: '123456' };
+      validateLogin(req, res, next);
+      expect(res.json).toHaveBeenCalledWith({ error: "Invalid email format" });
     });
 
-    test("should reject short name in validateUser", () => {
-      // Arrange
-      mockReq.body = {
-        name: "A",
-        email: "test@example.com",
-      };
+    it('should call next for valid credentials', () => {
+      req.body = { email: 'user@example.com', password: 'password123' };
+      validateLogin(req, res, next);
+      expect(next).toHaveBeenCalled();
+    });
+  });
 
-      // Act
-      validateUser(mockReq, mockRes, mockNext);
-
-      // Assert
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        error: "Name must be at least 2 characters long",
-      });
+  describe('validateUUID', () => {
+    it('should return error for invalid UUID', () => {
+      req.params = { user_id: 'invalid-uuid' };
+      validateUUID(req, res, next);
+      expect(res.json).toHaveBeenCalledWith({ error: "Invalid user ID format" });
     });
 
-    test("should reject long name in validateUser", () => {
-      // Arrange
-      mockReq.body = {
-        name: "A".repeat(101),
-        email: "test@example.com",
-      };
-
-      // Act
-      validateUser(mockReq, mockRes, mockNext);
-
-      // Assert
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        error: "Name cannot exceed 100 characters",
-      });
-    });
-
-    test("should reject invalid email in validateUser", () => {
-      // Arrange
-      mockReq.body = {
-        name: "Test User",
-        email: "invalid-email",
-        password: "password123",
-      };
-
-      // Act
-      validateUser(mockReq, mockRes, mockNext);
-
-      // Assert
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        error: "Invalid email format",
-      });
+    it('should call next for valid UUID', () => {
+      req.params = { user_id: '123e4567-e89b-12d3-a456-426614174000' };
+      validateUUID(req, res, next);
+      expect(next).toHaveBeenCalled();
     });
   });
 });

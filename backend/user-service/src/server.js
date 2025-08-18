@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import dotenv from "dotenv";
-import Redis from "redis";
+import { createClient } from "redis";
 import userRoutes from "./routes/users.js";
 import db from "./config/database.js";
 import CacheManager from "./config/cacheManager.js";
@@ -14,9 +14,11 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Shared cache configuration
-export const redis = Redis.createClient({
-  host: process.env.REDIS_HOST || "localhost",
-  port: process.env.REDIS_PORT || 6379,
+export const redis = createClient({
+  socket: {
+    host: process.env.REDIS_HOST || "localhost",
+    port: process.env.REDIS_PORT || 6379,
+  },
   password: process.env.REDIS_PASSWORD || undefined,
 });
 

@@ -39,9 +39,8 @@ class UnauthorizedException extends BaseException {
  * Forbidden Error - for authorization failures
  */
 class ForbiddenException extends BaseException {
-    constructor(message = 'Access forbidden', resource = null, additionalData = {}) {
+    constructor(message = 'Access forbidden', additionalData = {}) {
         super(message, 403, 'FORBIDDEN', {
-            resource,
             ...additionalData
         });
     }
@@ -51,9 +50,8 @@ class ForbiddenException extends BaseException {
  * Conflict Error - for resource conflicts
  */
 class ConflictException extends BaseException {
-    constructor(message = 'Resource conflict', resource = null, additionalData = {}) {
+    constructor(message = 'Resource conflict', additionalData = {}) {
         super(message, 409, 'CONFLICT', {
-            resource,
             ...additionalData
         });
     }

@@ -1,16 +1,21 @@
 import { jest } from "@jest/globals";
-import UserRepository from "../../src/repository/userRepository.js";
-import userController from "../../src/controllers/userController.js";
-import User from "../../src/models/user.js";
+import UserService from "../../src/service/userService.js";
+import UserController from "../../src/controllers/userController.js";
+import SpecializedException from "../../src/exception/specializedException.js";
+import { cacheManager } from "../../src/server.js";
 
-jest.mock("../../src/repository/userRepository");
-jest.mock("../../src/models/user.js");
+jest.mock("../../src/service/userService.js");
+jest.mock("../../src/server.js", () => ({
+  cacheManager: {
+    get: jest.fn(),
+  },
+}));
 
-describe("Create User - Controller", () => {
+describe("UserController", () => {
   let mockReq, mockRes;
 
-  beforeEach(async () => {
-    mockReq = { body: {}, params: {}, query: {} };
+  beforeEach(() => {
+    mockReq = { body: {} };
     mockRes = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
@@ -18,85 +23,104 @@ describe("Create User - Controller", () => {
     jest.clearAllMocks();
   });
 
-  describe("createUser()", () => {
-    test("should create user successfully", async () => {
-      // Arrange
-      mockReq.body = {
-        email: "test@example.com",
-        name: "Test User",
-      };
-      const mockUser = new User({
-        user_id: "uuid-123",
-        email: "test@example.com",
-        name: "Test User",
-        created_at: new Date(),
-        is_verified: false,
-      });
+  describe("initializeRegistration", () => {
+    it("should create user successfully", async () => {
+      mockReq.body = { email: "test@example.com", name: "John" };
+      const fakeUser = { id: 1, email: "test@example.com", name: "John" };
+      UserService.createUser.mockResolvedValue(fakeUser);
 
-      UserRepository.findByEmail.mockResolvedValue(null);
-      UserRepository.create.mockResolvedValue(mockUser);
+      await UserController.intializeRegistration(mockReq, mockRes);
 
-      // Act
-      await userController.createUser(mockReq, mockRes);
-
-      // Assert
-      expect(UserRepository.findByEmail).toHaveBeenCalledWith(
-        "test@example.com"
-      );
-      expect(UserRepository.create).toHaveBeenCalledWith(mockReq.body);
+      expect(UserService.createUser).toHaveBeenCalledWith("test@example.com", "John");
       expect(mockRes.status).toHaveBeenCalledWith(201);
       expect(mockRes.json).toHaveBeenCalledWith({
         message: "User created successfully",
-        user: mockUser,
+        user: fakeUser,
       });
     });
-  });
-  describe("Create User - Error Handling", () => {
-    test("should handle database errors in createUser", async () => {
-      // Arrange
-      mockReq.body = {
-        email: "test@example.com",
-        name: "Test User",
-      };
 
-      UserRepository.findByEmail = jest.fn().mockResolvedValue(null);
-      UserRepository.create = jest
-        .fn()
-        .mockRejectedValue(new Error("Database error"));
+    it("should handle email already registered", async () => {
+      mockReq.body = { email: "fail@example.com", name: "Failing User" };
+      const error = new SpecializedException.ConflictException(`User with this email already exists: ${mockReq.body.email}`);
+      UserService.createUser.mockRejectedValue(error);
 
-      console.error = jest.fn(); // Mock console.error
+      await UserController.intializeRegistration(mockReq, mockRes);
 
-      // Act
-      await userController.createUser(mockReq, mockRes);
+      expect(mockRes.status).toHaveBeenCalledWith(409);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        error: `User with this email already exists: ${mockReq.body.email}`
+      });
+    });
 
-      // Assert
+    it("should handle unexpected errors", async () => {
+      const error = new Error("Something went wrong");
+      UserService.createUser.mockRejectedValue(error);
+
+      await UserController.intializeRegistration(mockReq, mockRes);
+
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
         error: "Internal server error",
       });
-      expect(console.error).toHaveBeenCalled();
     });
+  });
 
-    test("should handle email already exists", async () => {
-      // Arrange
-      mockReq.body = {
-        email: "test@example.com",
-        name: "Test User",
+  describe("finalizeRegistration", () => {
+    it("should finalize user registration successfully", async () => {
+      const mockReq = {
+        body: {
+          email: "test@example.com",
+          otp: "123456",
+          password: "securePassword123",
+        },
+      };
+      const mockRes = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
       };
 
-      const duplicateError = new Error("Duplicate key value");
-      duplicateError.code = "23505";
+      // Mock successful call
+      UserService.finalizeRegistration = jest.fn().mockResolvedValue();
 
-      UserRepository.findByEmail = jest.fn().mockResolvedValue(null);
-      UserRepository.create = jest.fn().mockRejectedValue(duplicateError);
+      await UserController.finalizeRegistration(mockReq, mockRes);
 
-      // Act
-      await userController.createUser(mockReq, mockRes);
-
-      // Assert
-      expect(mockRes.status).toHaveBeenCalledWith(409);
+      expect(UserService.finalizeRegistration).toHaveBeenCalledWith(
+        "test@example.com",
+        "123456",
+        "securePassword123"
+      );
+      expect(mockRes.status).toHaveBeenCalledWith(201);
       expect(mockRes.json).toHaveBeenCalledWith({
-        error: "User with this email already exists",
+        message: "User registration finalized",
+      });
+    });
+
+    it("should handle errors from UserService.finalizeRegistration", async () => {
+      const mockReq = {
+        body: {
+          email: "test@example.com",
+          otp: "wrongotp",
+          password: "securePassword123",
+        },
+      };
+      const mockRes = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      };
+
+      const error = new Error("Invalid OTP");
+      UserService.finalizeRegistration = jest.fn().mockRejectedValue(error);
+
+      await UserController.finalizeRegistration(mockReq, mockRes);
+
+      expect(UserService.finalizeRegistration).toHaveBeenCalledWith(
+        "test@example.com",
+        "wrongotp",
+        "securePassword123"
+      );
+      expect(mockRes.status).toHaveBeenCalledWith(500);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        error: "Internal server error",
       });
     });
   });

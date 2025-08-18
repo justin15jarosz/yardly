@@ -3,6 +3,7 @@ import { publishMessage, TOPICS } from "../config/kafka.js";
 import { cacheManager } from "../server.js";
 import ExceptionFactory from "../exception/exceptionFactory.js";
 import SpecializedException from "../exception/specializedException.js";
+import BaseException from "../exception/baseException.js";
 
 class UserService {
   // Create new user
@@ -10,9 +11,9 @@ class UserService {
     try {
       // Check if user with email already exists
       const existingUser = await UserRepository.findByEmail(email);
-      await ExceptionFactory.throwIf(existingUser, SpecializedException.ConflictException, "User with this email already exists.");
+      await ExceptionFactory.throwIf(existingUser, SpecializedException.ConflictException, `User with this email already exists: ${email}`);
 
-      const user = await UserRepository.create({ email, name });
+      const user = (await UserRepository.create({ email, name })).toJSON();
 
       // Prepare message for Kafka
       const kafkaMessage = {
@@ -33,19 +34,17 @@ class UserService {
       }
 
       // Handle other errors, such as database errors or Kafka publishing issues
-      console.error("Error publishing to Kafka:", kafkaError);
-      ExceptionFactory.throw(InternalServerException, "Failed to publish user registration message", kafkaError);
+      console.error("Internal Service Error:", error);
+      await ExceptionFactory.throw(BaseException, `${error}`);
     }
   }
 
   // Create new user
-  async finalizeRegistration(req, res) {
-    const { email, otp, password } = req.body;
+  async finalizeRegistration(email, otp, password) {
     const cacheKey = `otp_registration_${email}`;
     cacheManager.get(cacheKey).then((value) => {
       console.log("Retrieved from cache:", value);
     });
-    res.status(201).json({ message: "Finalize registration endpoint hit" });
   }
 }
 

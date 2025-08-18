@@ -44,12 +44,12 @@ class ExceptionFactory {
         throw new UnauthorizedException(message, additionalData);
     }
 
-    static forbidden(message, resource, additionalData) {
-        throw new ForbiddenException(message, resource, additionalData);
+    static forbidden(message, additionalData) {
+        throw new ForbiddenException(message, additionalData);
     }
 
-    static conflict(message, resource, additionalData) {
-        throw new ConflictException(message, resource, additionalData);
+    static conflict(message, additionalData) {
+        throw new ConflictException(message, additionalData);
     }
 
     static rateLimit(message, limit, additionalData) {
