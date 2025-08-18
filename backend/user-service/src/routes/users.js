@@ -7,7 +7,7 @@ const router = express.Router();
 router.use(requestLogger);
 
 // POST create new user (register)
-router.post("/", validateUser, userController.createUser);
+router.post("/register/initialize", validateUser, userController.intializeRegistration);
 
 // Verify OTP and complete registration
 router.post("/register/finalize", userController.finalizeRegistration);

@@ -2,8 +2,9 @@ export default {
   testEnvironment: "node",
   collectCoverage: true,
   collectCoverageFrom: [
-    "src/models/**/*.js",
     "src/controllers/**/*.js",
+    "src/service/**/*.js",
+    "src/repository/**/*.js",
     "src/util/**/*.js",
     "config/**/*.js",
     "routes/**/*.js",
@@ -19,12 +20,6 @@ export default {
       functions: 90,
       lines: 90,
       statements: 90,
-    },
-    "./src/models/": {
-      branches: 90,
-      functions: 95,
-      lines: 95,
-      statements: 95,
     },
     "./src/controllers/": {
       branches: 85,

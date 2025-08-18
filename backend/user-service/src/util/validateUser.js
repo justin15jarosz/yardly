@@ -53,6 +53,8 @@ export const validatePassword = (req, res, next) => {
       error: "Password must be at least 6 characters long",
     });
   }
+
+  next();
 };
 
 // Validation middleware for user login
