@@ -50,26 +50,27 @@ class Database {
 
   // Initialize database tables
   async initTables() {
-    const createUsersTable = `
+    const createCredentialsTable = `
       CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-      CREATE TABLE IF NOT EXISTS users (
-        user_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      CREATE TABLE IF NOT EXISTS credentials (
+        crendentials_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         email VARCHAR(255) UNIQUE NOT NULL CHECK (email ~* '^[A-Za-z0-9._+%-]+@[A-Za-z0-9.-]+[.][A-Za-z]+$'),
-        name VARCHAR(100) NOT NULL CHECK (LENGTH(name) >= 2),
+        password VARCHAR(255) DEFAULT NULL,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        is_verified BOOLEAN DEFAULT FALSE
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
       );
     `;
 
     const createIndexes = `
       CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-      CREATE INDEX IF NOT EXISTS idx_users_verified ON users(is_verified);
       CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at);
+      CREATE INDEX IF NOT EXISTS idx_users_updated_at ON users(updated_at);
+\
     `;
 
     try {
-      await this.query(createUsersTable);
+      await this.query(createCredentialsTable);
       await this.query(createIndexes);
       console.log("Database tables initialized successfully");
     } catch (error) {
