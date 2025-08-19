@@ -1,6 +1,6 @@
 FROM node:20-alpine
 
-WORKDIR /app/user-service
+WORKDIR /app/auth-service
 
 COPY package.json .
 

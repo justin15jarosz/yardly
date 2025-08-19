@@ -1,43 +1,46 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  user-service:
-    build: ./user-service
-    expose:
-      - 3001
-    environment:
-      - PORT=3001
-      - INTERNAL_SERVICE_TOKEN=super-secret-token
-    networks:
-      - internal
-
   auth-service:
-    build: ./auth-service
+    build: .
+    container_name: auth-service
+    restart: always
+    env_file:
+      - .env
     ports:
-      - "3002:3002"
+      - "3003:3003"
     depends_on:
-      - user-service
-    environment:
-      - USER_SERVICE_URL=http://user-service:3001/internal
-      - INTERNAL_SERVICE_TOKEN=super-secret-token
-    networks:
-      - internal
+      - postgres
+      - redis
+      - zookeeper
+      - kafka
 
-  nginx:
-    image: nginx:latest
-    ports:
-      - "80:80"
+  postgres:
+    image: postgres:15
+    container_name: auth-service-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-    depends_on:
-      - user-service
-    networks:
-      - internal
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    container_name: auth-service-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
 
   # Zookeeper service (required for Kafka)
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
-    container_name: zookeeper
+    container_name: auth-service-zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -50,7 +53,7 @@ services:
   # Kafka broker
   kafka:
     image: confluentinc/cp-kafka:7.4.0
-    container_name: kafka
+    container_name: auth-service-kafka
     depends_on:
       - zookeeper
     ports:
@@ -78,7 +81,7 @@ services:
   # Kafka UI (optional - for monitoring)
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
-    container_name: kafka-ui
+    container_name: auth-service-kafka-ui
     depends_on:
       - kafka
     ports:
@@ -90,23 +93,9 @@ services:
     profiles:
       - ui
 
-  # Redis (optional - for session management)
-  redis:
-    image: redis:7-alpine
-    container_name: redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    profiles:
-      - cache
-
 volumes:
+  pgdata:
   zookeeper-data:
   zookeeper-logs:
   kafka-data:
   redis-data:
-
-networks:
-  internal:
-    driver: bridge

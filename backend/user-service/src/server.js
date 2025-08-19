@@ -2,25 +2,15 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import dotenv from "dotenv";
-import { createClient } from "redis";
-import userRoutes from "./routes/users.js";
 import db from "./config/database.js";
-import CacheManager from "./config/cacheManager.js";
 import { createTopics, connectProducer, disconnect } from "./config/kafka.js";
+import userRoutes from "./routes/public/users.js";
+import internalRoutes from "./routes/internal/user.internal.js";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-
-// Shared cache configuration
-export const redis = createClient({
-  socket: {
-    host: process.env.REDIS_HOST || "localhost",
-    port: process.env.REDIS_PORT || 6379,
-  },
-  password: process.env.REDIS_PASSWORD || undefined,
-});
 
 // Middleware
 app.use(helmet());
@@ -28,8 +18,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
+// Public Routes
 app.use("/api/users", userRoutes);
+
+// Internal Routes
+app.use('/internal', internalRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -56,15 +49,10 @@ db.initTables()
   .then(() => console.log("Database initialized"))
   .catch((err) => console.error("Database initialization error:", err));
 
-export let cacheManager = null;
-
 // Initialize Kafka and start server
 async function startServer() {
   try {
     console.log("🚀 Starting User Service...");
-
-    // Initialize cache manager
-    cacheManager = new CacheManager();
 
     // Initialize Kafka
     await createTopics();
