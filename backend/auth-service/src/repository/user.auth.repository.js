@@ -4,18 +4,18 @@ import UserCredentials from "../models/user.credentials.js";
 
 class UserAuthRepository {
 
-  static async createUserCredentials(email, password) {
+  static async createUserCredentials(user_id, email, password) {
     try {
       // Hash password
       const saltRounds = 12;
       const hashedPassword = await bcrypt.hash(password, saltRounds);
       const query = `
-        INSERT INTO credentials (email, password)
-        VALUES ($1, $2)
-        RETURNING credentials_id, email, created_at, updated_at
+        INSERT INTO credentials (user_id, email, password)
+        VALUES ($1, $2, $3)
+        RETURNING credentials_id, user_id, email, created_at, updated_at
       `;
 
-      const result = await db.query(query, [hashedPassword, email]);
+      const result = await db.query(query, [user_id, email, hashedPassword]);
       return new UserCredentials(result.rows[0]);
     } catch (error) {
       throw error;

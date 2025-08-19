@@ -54,18 +54,21 @@ class Database {
       CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
       CREATE TABLE IF NOT EXISTS credentials (
-        crendentials_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        credentials_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         email VARCHAR(255) UNIQUE NOT NULL CHECK (email ~* '^[A-Za-z0-9._+%-]+@[A-Za-z0-9.-]+[.][A-Za-z]+$'),
         password VARCHAR(255) DEFAULT NULL,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        user_id UUID NOT NULL UNIQUE,
+        CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+
       );
     `;
 
     const createIndexes = `
-      CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-      CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at);
-      CREATE INDEX IF NOT EXISTS idx_users_updated_at ON users(updated_at);
+      CREATE INDEX IF NOT EXISTS idx_credentials_email ON credentials(email);
+      CREATE INDEX IF NOT EXISTS idx_credentials_created_at ON credentials(created_at);
+      CREATE INDEX IF NOT EXISTS idx_credentials_updated_at ON credentials(updated_at);
 \
     `;
 

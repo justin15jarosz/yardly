@@ -1,4 +1,7 @@
 import axios from 'axios';
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const BASE_URL = process.env.USER_SERVICE_URL;
 const INTERNAL_TOKEN = process.env.INTERNAL_SERVICE_TOKEN;
@@ -16,8 +19,8 @@ class UserServiceClient {
   }
 
   async getUserByEmail(email) {
-    const res = await client.get(`/users/email/${email}`);
-    return res.data;
+    const res = await client.get('/users/by-email', { params: email });
+    return res.data.user;
   }
 };
 

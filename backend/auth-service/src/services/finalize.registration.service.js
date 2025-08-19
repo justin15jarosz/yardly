@@ -1,5 +1,6 @@
 import UserAuthRepository from "../repository/user.auth.repository.js";
 import ExceptionFactory from "../middlewares/exceptions/exception.factory.js";
+import UserServiceClient from "../utils/user.service.client.js";
 import { cacheManager } from "../config/cache.manager.js";
 
 class FinalizeRegistrationService {
@@ -7,10 +8,11 @@ class FinalizeRegistrationService {
     const cacheKey = `otp_registration_${email}`;
     try {
       const value = await cacheManager.get(cacheKey);
-      console.log("Retrieved from cache:", value);
       if (value === otp) {
         try {
-          await UserAuthRepository.createUserCredentials(email, password);
+          const user = await UserServiceClient.getUserByEmail({ email });
+          await UserAuthRepository.createUserCredentials(user.user_id, email, password);
+          await UserServiceClient.markUserActive(user.user_id);
           console.log(`✅ User registration finalized: ${email}`);
           await cacheManager.del(cacheKey);
         } catch (error) {
