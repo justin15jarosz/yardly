@@ -1,6 +1,7 @@
 // src/services/password.service.js
 import jwt from 'jsonwebtoken';
 import redis from '../config/cacheManager.js';
+import crypto from 'crypto';
 
 class PasswordService {
     async generateResetToken(userId) {
@@ -14,7 +15,7 @@ class PasswordService {
     async verifyResetToken(token) {
         const payload = jwt.verify(token, process.env.JWT_RESET_SECRET);
         const stored = await redis.get(`reset_${payload.sub}`);
-        if (stored !== token) throw new Error('Invalid or expired token');
+        if (!crypto.timingSafeEqual(stored, token)) throw new Error('Invalid or expired token');
         return payload.sub;
     };
 
