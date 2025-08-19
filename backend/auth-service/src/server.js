@@ -2,9 +2,10 @@ import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimiter from './middlewares/rate.limiter.js';
-import authRoutes from './routes/auth.routes.js';
+import authRoutes from './routes/public/auth.routes.js';
+import registrationRoutes from './routes/public/user.registration.routes.js';
 import db from "./config/database.js";
-import initRedis from "./config/cache.manager.js";
+import { initRedis } from "./config/cache.manager.js";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -20,9 +21,11 @@ app.use(morgan('dev'));
 
 // Rate limiting on auth endpoints
 app.use('/api/auth', rateLimiter);
+app.use('/api/user', rateLimiter);
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/user', registrationRoutes);
 
 // 404 handler
 app.use("*", (req, res) => {
@@ -60,7 +63,6 @@ async function startServer() {
         POST /auth/logout
         POST /auth/request-password-reset
         POST /auth/reset-password`);
-        console.log(authRoutes.stack.map(r => `- ${r.route.path} (${r.route.methods})`).join('\n'));
     });
   } catch (error) {
     console.error("❌ Failed to start Auth Service:", error);

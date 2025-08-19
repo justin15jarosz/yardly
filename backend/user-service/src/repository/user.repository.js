@@ -8,7 +8,7 @@ class UserRepository {
 
     // Default is_verified to false for new users
     const is_verified = false;
-    
+
     try {
       const query = `
         INSERT INTO users (email, name, is_verified)
@@ -24,15 +24,22 @@ class UserRepository {
   }
 
   // Find user by email
-  static async findByEmail(email, includePassword = false) {
-    const fields = includePassword
-      ? "user_id, email, password, name, created_at, is_verified"
-      : "user_id, email, name, created_at, is_verified";
-
-    const query = `SELECT ${fields} FROM users WHERE email = $1`;
+  static async findByEmail(email) {
+    const query = `SELECT user_id, email, name, created_at, is_verified FROM users WHERE email = $1`;
 
     try {
       const result = await db.query(query, [email]);
+      return result.rows.length > 0 ? result.rows[0] : null;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async verifyUser(user_id) {
+    const query = `UPDATE users SET is_verified = TRUE WHERE user_id = $1`;
+
+    try {
+      const result = await db.query(query, [user_id]);
       return result.rows.length > 0 ? result.rows[0] : null;
     } catch (error) {
       throw error;
