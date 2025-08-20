@@ -1,8 +1,6 @@
 import UserRepository from "../repository/user.repository.js";
 import { publishMessage, TOPICS } from "../config/kafka.js";
-import ExceptionFactory from "../middlewares/exceptions/exception.factory.js";
-import { ConflictException } from "../middlewares/exceptions/specialized.exception.js";
-import BaseException from "../middlewares/exceptions/base.exception.js";
+import { ExceptionFactory , ConflictException, BaseException } from "shared";
 
 class UserService {
   // Create new user

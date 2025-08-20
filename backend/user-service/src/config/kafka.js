@@ -3,7 +3,7 @@ import { Kafka } from "kafkajs";
 // Kafka configuration
 const kafka = new Kafka({
   clientId: "user-registration-app",
-  brokers: ["localhost:9092"], // Default Kafka broker address
+  brokers: [process.env.KAFKA_BROKER || 'kafka:29092'],
   retry: {
     initialRetryTime: 100,
     retries: 8,

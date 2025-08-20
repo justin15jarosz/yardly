@@ -62,9 +62,7 @@ async function startServer() {
     app.listen(PORT, () => {
       console.log(`✅ User Service running on http://localhost:${PORT}`);
       console.log(`📋 Available endpoints:
-        POST /api/register - Register new user
-        POST /api/verify-otp - Verify OTP
-        GET /api/user/:email - Get user status
+        POST /api/users/register/initialize - Register new user
         GET /health - Health check`);
     });
   } catch (error) {

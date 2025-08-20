@@ -43,6 +43,19 @@ class UserAuthRepository {
       throw error;
     }
   }
+
+  static async findByEmail(email) {
+    try {
+      const query = `
+        SELECT user_id, password FROM credentials
+        WHERE email = $1
+      `;
+      const result = await db.query(query, [email]);
+      return result.rows[0];
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default UserAuthRepository;
