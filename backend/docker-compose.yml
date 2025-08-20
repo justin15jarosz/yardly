@@ -2,24 +2,48 @@ version: '3.8'
 
 services:
   user-service:
-    build: ./user-service
-    expose:
-      - 3001
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
+    ports:
+    - "3001:3001"
+    depends_on:
+      - kafka
+      - postgres
     environment:
       - PORT=3001
       - INTERNAL_SERVICE_TOKEN=super-secret-token
+      # - KAFKA_BROKER=kafka:29092
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=yardly
     networks:
       - internal
 
   auth-service:
-    build: ./auth-service
-    ports:
-      - "3002:3002"
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
     depends_on:
       - user-service
+      - redis
+    ports:
+    - "3002:3002"
     environment:
+      - PORT=3002
       - USER_SERVICE_URL=http://user-service:3001/internal
       - INTERNAL_SERVICE_TOKEN=super-secret-token
+      - REDIS_URL=redis://redis:6379
+      - JWT_ACCESS_SECRET=supersecretaccesstoken
+      - JWT_REFRESH_SECRET=supersecretrefreshtoken
+      - JWT_RESET_SECRET=supersecretresettoken
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=yardly
     networks:
       - internal
 
@@ -34,10 +58,28 @@ services:
     networks:
       - internal
 
+  # Postgres
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres       # ← adjust as needed
+      POSTGRES_PASSWORD: postgres   # ← use secrets in real deployments
+      POSTGRES_DB: yardly              # ← name of the database
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - internal
+
   # Zookeeper service (required for Kafka)
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
     container_name: zookeeper
+    networks:
+      - internal
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -51,6 +93,8 @@ services:
   kafka:
     image: confluentinc/cp-kafka:7.4.0
     container_name: kafka
+    networks:
+      - internal
     depends_on:
       - zookeeper
     ports:
@@ -79,6 +123,8 @@ services:
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
+    networks:
+      - internal
     depends_on:
       - kafka
     ports:
@@ -90,7 +136,6 @@ services:
     profiles:
       - ui
 
-  # Redis (optional - for session management)
   redis:
     image: redis:7-alpine
     container_name: redis
@@ -98,10 +143,11 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
-    profiles:
-      - cache
-
+    networks:
+      - internal
+      
 volumes:
+  postgres-data:
   zookeeper-data:
   zookeeper-logs:
   kafka-data:

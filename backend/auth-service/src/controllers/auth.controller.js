@@ -1,29 +1,23 @@
-// src/controllers/auth.controller.js
-import bcrypt from 'bcrypt';
 import tokenService from '../services/token.service.js';
 import { cacheManager } from '../config/cache.manager.js';
-import UserServiceClient from '../utils/user.service.client.js';
+import AuthService from '../services/auth.service.js';
 
 class AuthController {
   async login(req, res, next) {
     try {
       const { email, password } = req.body;
-      const user = await UserServiceClient.getUserByEmail({ email });
 
-      console.log(`User found: ${user ? user.user_id : 'No user found'}`);
-      
-      if (!user || !(await bcrypt.compare(password, user.password))) {
-        return res.status(401).json({ message: 'Invalid credentials' });
-      }
+      const user_id = await AuthService.login(email, password);
 
-      const accessToken = tokenService.generateAccessToken(user);
-      const refreshToken = tokenService.generateRefreshToken(user);
+      const accessToken = await tokenService.generateAccessToken(user_id);
+      const refreshToken = await tokenService.generateRefreshToken(user_id);
 
-      await cacheManager.set(`refresh_${user.id}`, refreshToken, 'EX', 7 * 24 * 60 * 60); // 7 days
+      await cacheManager.set(`refresh_${user_id}`, refreshToken, 'EX', 7 * 24 * 60 * 60); // 7 days
 
       res.json({ accessToken, refreshToken });
-    } catch (err) {
-      next(err);
+    } catch (error) {
+      res.status(error.statusCode || 500).json({ error: error.message || "Internal Server Error" });
+      next(error);
     }
   };
 

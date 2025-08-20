@@ -1,5 +1,5 @@
 import UserService from "../service/user.service.js";
-import BaseException from "../middlewares/exceptions/base.exception.js";
+import { BaseException } from "shared";
 
 class UserController {
   // Create new user

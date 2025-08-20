@@ -21,11 +21,11 @@ app.use(morgan('dev'));
 
 // Rate limiting on auth endpoints
 app.use('/api/auth', rateLimiter);
-app.use('/api/user', rateLimiter);
+app.use('/api/users', rateLimiter);
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/user', registrationRoutes);
+app.use('/api/users', registrationRoutes);
 
 // 404 handler
 app.use("*", (req, res) => {
@@ -58,11 +58,12 @@ async function startServer() {
     app.listen(PORT, () => {
       console.log(`✅ Auth Service running on http://localhost:${PORT}`);
       console.log(`📋 Available endpoints:
-        POST /auth/login
-        POST /auth/refresh
-        POST /auth/logout
-        POST /auth/request-password-reset
-        POST /auth/reset-password`);
+        POST /api/users/register/finalize
+        POST /api/auth/login
+        POST /api/auth/refresh
+        POST /api/auth/logout
+        POST /api/auth/request-password-reset
+        POST /api/auth/reset-password`);
     });
   } catch (error) {
     console.error("❌ Failed to start Auth Service:", error);

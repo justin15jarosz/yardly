@@ -1,13 +1,10 @@
 import UserService from '../../src/service/user.service.js';
 import UserRepository from '../../src/repository/user.repository.js';
 import { publishMessage, TOPICS } from '../../src/config/kafka.js';
-import ExceptionFactory from '../../src/middlewares/exceptions/exception.factory.js';
-import { ConflictException } from '../../src/middlewares/exceptions/specialized.exception.js';
-import BaseException from '../../src/middlewares/exceptions/base.exception.js';
+import { ExceptionFactory, ConflictException, BaseException} from 'shared';
 
 jest.mock('../../src/repository/user.repository.js');
 jest.mock('../../src/config/kafka.js');
-jest.mock('../../src/middlewares/exceptions/exception.factory.js');
 
 describe('UserService', () => {
     afterEach(() => {
