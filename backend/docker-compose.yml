@@ -153,8 +153,8 @@ services:
       - KAFKA_BROKERS=kafka-broker:9092
       - SMTP_HOST=smtp.gmail.com
       - SMTP_PORT=587
-      - EMAIL_USER=justin15jarosz@gmail.com
-      - EMAIL_PASS=xuhp gqup vlpo onqu
+      - EMAIL_USER=
+      - EMAIL_PASS=
       - INTERNAL_SERVICE_TOKEN=super-secret-token
     depends_on:
       redis:
