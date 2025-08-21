@@ -1,158 +1,179 @@
-version: '3.8'
-
 services:
-  user-service:
-    build:
-      context: .
-      dockerfile: user-service/Dockerfile
-    ports:
-    - "3001:3001"
-    depends_on:
-      - kafka
-      - postgres
-    environment:
-      - PORT=3001
-      - INTERNAL_SERVICE_TOKEN=super-secret-token
-      # - KAFKA_BROKER=kafka:29092
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=yardly
-    networks:
-      - internal
-
-  auth-service:
-    build:
-      context: .
-      dockerfile: auth-service/Dockerfile
-    depends_on:
-      - user-service
-      - redis
-    ports:
-    - "3002:3002"
-    environment:
-      - PORT=3002
-      - USER_SERVICE_URL=http://user-service:3001/internal
-      - INTERNAL_SERVICE_TOKEN=super-secret-token
-      - REDIS_URL=redis://redis:6379
-      - JWT_ACCESS_SECRET=supersecretaccesstoken
-      - JWT_REFRESH_SECRET=supersecretrefreshtoken
-      - JWT_RESET_SECRET=supersecretresettoken
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=yardly
-    networks:
-      - internal
-
-  nginx:
-    image: nginx:latest
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-    depends_on:
-      - user-service
-    networks:
-      - internal
-
-  # Postgres
+  # Infrastructure Services
   postgres:
-    image: postgres:16-alpine
-    container_name: postgres
-    restart: unless-stopped
+    image: postgres:15
+    container_name: postgres-db
+    environment:
+      POSTGRES_DB: yardly
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST_AUTH_METHOD: md5
+      POSTGRES_INITDB_ARGS: "--auth-host=md5"
     ports:
       - "5432:5432"
-    environment:
-      POSTGRES_USER: postgres       # ← adjust as needed
-      POSTGRES_PASSWORD: postgres   # ← use secrets in real deployments
-      POSTGRES_DB: yardly              # ← name of the database
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
-      - internal
+      - microservices-network
 
-  # Zookeeper service (required for Kafka)
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.4.0
-    container_name: zookeeper
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
     networks:
-      - internal
+      - microservices-network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:6.2.0
+    container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
-    volumes:
-      - zookeeper-data:/var/lib/zookeeper/data
-      - zookeeper-logs:/var/lib/zookeeper/log
-
-  # Kafka broker
-  kafka:
-    image: confluentinc/cp-kafka:7.4.0
-    container_name: kafka
-    networks:
-      - internal
-    depends_on:
-      - zookeeper
-    ports:
-      - "9092:9092"
-      - "9094:9094"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
-      KAFKA_DELETE_TOPIC_ENABLE: true
-    volumes:
-      - kafka-data:/var/lib/kafka/data
     healthcheck:
-      test: kafka-broker-api-versions --bootstrap-server localhost:9092
+      test: ["CMD", "bash", "-c", "echo 'ruok' | nc localhost 2181"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-  # Kafka UI (optional - for monitoring)
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: kafka-ui
     networks:
-      - internal
+      - microservices-network
+
+  kafka:
+    image: confluentinc/cp-kafka:6.2.0
+    container_name: kafka-broker
     depends_on:
-      - kafka
+      zookeeper:
+        condition: service_healthy
     ports:
-      - "8080:8080"
+      - "9092:9092"
     environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
-      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
-    profiles:
-      - ui
-
-  redis:
-    image: redis:7-alpine
-    container_name: redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
     networks:
+      - microservices-network
+
+  # Microservices
+  user-service:
+    build:
+      context: .
+      dockerfile: ./user-service/Dockerfile
+    container_name: user-service
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres-db:5432/yardly
+      - KAFKA_BROKERS=kafka-broker:9092
+      - INTERNAL_SERVICE_TOKEN=super-secret-token
+      - POSTGRES_HOST=postgres-db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=yardly
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - microservices-network
       - internal
-      
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: ./auth-service/Dockerfile
+    container_name: auth-service
+    ports:
+      - "3002:3002"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres-db:5432/yardly
+      - REDIS_URL=redis://redis-cache:6379
+      - USER_SERVICE_URL=http://user-service:3001/internal
+      - INTERNAL_SERVICE_TOKEN=super-secret-token
+      - JWT_ACCESS_SECRET=supersecretaccesstoken
+      - JWT_REFRESH_SECRET=supersecretrefreshtoken
+      - JWT_RESET_SECRET=supersecretresettoken
+      - POSTGRES_HOST=postgres-db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=yardly
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - microservices-network
+      - internal
+
+  email-service:
+    build:
+      context: .
+      dockerfile: ./email-service/Dockerfile
+    container_name: email-service
+    ports:
+      - "3003:3003"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - KAFKA_BROKERS=kafka-broker:9092
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=587
+      - INTERNAL_SERVICE_TOKEN=super-secret-token
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - microservices-network
+
 volumes:
-  postgres-data:
-  zookeeper-data:
-  zookeeper-logs:
-  kafka-data:
-  redis-data:
+  postgres_data:
+  kafka_data:
 
 networks:
+  microservices-network:
+    driver: bridge
   internal:
     driver: bridge

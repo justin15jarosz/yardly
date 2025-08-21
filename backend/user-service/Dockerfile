@@ -1,22 +1,27 @@
-FROM node:20-alpine
+FROM node:18-alpine
+
+# Install dockerize
+ENV DOCKERIZE_VERSION v0.6.1
+RUN apk add --no-cache wget \
+    && wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
 WORKDIR /app
 
-# Copy shared exceptions into image
-COPY shared ./shared
+# Copy service's package.json first
+COPY user-service/package*.json ./ 
 
-# Copy and install dependencies
-COPY user-service/package.json ./user-service/
+# Install dependencies
+RUN npm ci --only=production
 
-WORKDIR /app/user-service
-RUN npm install
-
-# Now copy the user-service source
-COPY user-service/. .
-
-# Wait-for script
-COPY wait-for.sh /wait-for.sh
-RUN chmod +x /wait-for.sh
+# Copy service code
+COPY user-service/ ./
 
 EXPOSE 3001
-CMD ["/wait-for.sh", "kafka", "29092", "/wait-for.sh", "postgres", "5432", "npm", "start"]
+# User service depends on Postgres, Kafka
+CMD ["dockerize", \
+     "-wait", "tcp://postgres-db:5432", \
+     "-wait", "tcp://kafka-broker:9092", \
+     "-timeout", "90s", \
+     "sh", "-c", "npm run migrate:up && npm start"]

@@ -1,7 +1,7 @@
 import { jest } from "@jest/globals";
 import UserService from "../../src/service/user.service.js";
 import UserController from "../../src/controllers/user.controller.js";
-import { ConflictException } from "shared";
+import { ConflictException } from "../../src/exceptions/specialized.exception.js";
 
 jest.mock("../../src/service/user.service.js");
 jest.mock("../../src/server.js", () => ({

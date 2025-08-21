@@ -1,12 +1,14 @@
 import UserService from '../../src/service/user.service.js';
 import UserRepository from '../../src/repository/user.repository.js';
 import { publishMessage, TOPICS } from '../../src/config/kafka.js';
-import { ExceptionFactory, ConflictException, BaseException} from 'shared';
+import { ExceptionFactory } from '../../src/exceptions/exception.factory.js';
+import { BaseException } from '../../src/exceptions/base.exception.js';
+import { ConflictException } from '../../src/exceptions/specialized.exception.js';
 
 // Mock dependencies
 jest.mock("../../src/repository/user.repository.js");
 jest.mock("../../src/config/kafka.js");
-jest.mock("shared", () => ({
+jest.mock("../../src/exceptions/exception.factory.js", () => ({
   ExceptionFactory: {
     throwIf: jest.fn(),
     throw: jest.fn()

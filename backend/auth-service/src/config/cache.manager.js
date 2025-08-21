@@ -1,5 +1,5 @@
 import { createClient } from "redis";
-import { BaseException } from "shared";
+import BaseException from "../exceptions/base.exception.js";
 
 // Shared cache configuration
 export const redis = createClient({

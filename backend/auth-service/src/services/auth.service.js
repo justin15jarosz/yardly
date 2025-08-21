@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import UserAuthRepository from "../repository/user.auth.repository.js";
-import { ExceptionFactory, UnauthorizedException } from "shared";
+import ExceptionFactory from "../exceptions/exception.factory.js";
 
 class AuthService {
 

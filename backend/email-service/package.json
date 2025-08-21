@@ -1,24 +1,16 @@
 {
-  "name": "user-service",
+  "name": "email-service",
   "version": "1.0.0",
   "description": "",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
-    "test": "jest",
-    "test:unit": "jest --testPathPattern=unit",
-    "test:integration": "jest --testPathPattern=integration",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:coverage:open": "jest --coverage && open coverage/lcov-report/index.html",
-    "test:ci": "jest --coverage --ci --watchAll=false --maxWorkers=2"
+    "dev": "nodemon src/server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bcrypt": "^6.0.0",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
@@ -28,10 +20,7 @@
     "kafkajs": "^2.2.4",
     "node-cache": "^5.1.2",
     "nodemailer": "^6.9.7",
-    "pg": "^8.16.3",
-    "redis": "^5.8.1",
-    "sequelize": "^6.32.1",
-    "uuid": "^9.0.1"
+    "redis": "^5.8.1"
   },
   "type": "module",
   "devDependencies": {

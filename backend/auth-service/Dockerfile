@@ -1,23 +1,27 @@
 FROM node:20-alpine
 
+# Install dockerize
+ENV DOCKERIZE_VERSION v0.6.1
+RUN apk add --no-cache wget \
+    && wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+
 WORKDIR /app
 
-# Copy shared exceptions into image
-COPY shared ./shared
+# Copy service's package.json first
+COPY auth-service/package*.json ./ 
 
-# Copy and install dependencies
-COPY auth-service/package.json ./auth-service/
+# Install dependencies
+RUN npm ci --only=production
 
-WORKDIR /app/auth-service
-RUN npm install
-
-# Copy the rest of auth-service source code
-COPY auth-service/. .
-
-# Wait-for script
-COPY wait-for.sh /wait-for.sh
-RUN chmod +x /wait-for.sh
+# Copy service code
+COPY auth-service/ ./
 
 EXPOSE 3002
-
-CMD ["/wait-for.sh", "redis", "6379", "/wait-for.sh", "user-service" ,"3001", "npm", "start"]
+# Auth service depends on Postgres, Redis, and User Service
+CMD ["dockerize", \
+     "-wait", "tcp://postgres-db:5432", \
+     "-wait", "tcp://redis-cache:6379", \
+     "-timeout", "120s", \
+     "npm", "start"]
