@@ -1,8 +1,7 @@
 import dotenv from "dotenv";
 import express from "express";
-import Redis from "redis";
 import nodemailer from "nodemailer";
-import CacheManager from "./config/cacheManager.js";
+import { initRedis } from "./config/cache.manager.js";
 import { connectConsumer, disconnect } from "./config/kafka.js";
 import { consumeMessages } from "./util/consumeMessage.js";
 
@@ -10,13 +9,6 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3002;
-
-// Shared cache configuration
-export const redis = Redis.createClient({
-  host: process.env.REDIS_HOST || "localhost",
-  port: process.env.REDIS_PORT || 6379,
-  password: process.env.REDIS_PASSWORD || undefined,
-});
 
 // Email configuration
 export const emailConfig = {
@@ -83,14 +75,13 @@ app.get("/status", async (req, res) => {
   }
 });
 
-export let cacheManager = null;
 // Initialize service
 async function startService() {
   try {
     console.log("🚀 Starting Email Service...");
 
     // Initialize cache manager
-    cacheManager = new CacheManager();
+    await initRedis();
 
     // Verify email configuration
     await verifyEmailConfig();

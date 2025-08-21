@@ -147,13 +147,14 @@ services:
       context: .
       dockerfile: ./email-service/Dockerfile
     container_name: email-service
-    ports:
-      - "3003:3003"
     environment:
-      - REDIS_URL=redis://redis:6379
+      - PORT=3004
+      - REDIS_URL=redis://redis-cache:6379
       - KAFKA_BROKERS=kafka-broker:9092
       - SMTP_HOST=smtp.gmail.com
       - SMTP_PORT=587
+      - EMAIL_USER=justin15jarosz@gmail.com
+      - EMAIL_PASS=xuhp gqup vlpo onqu
       - INTERNAL_SERVICE_TOKEN=super-secret-token
     depends_on:
       redis:

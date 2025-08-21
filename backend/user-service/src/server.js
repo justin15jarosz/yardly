@@ -18,8 +18,18 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const extractUserFromHeaders = (req, res, next) => {
+  req.gatewayUser = {
+    id: req.headers['x-user-id'],
+    email: req.headers['x-user-email'],
+    role: req.headers['x-user-role'],
+    permissions: JSON.parse(req.headers['x-user-permissions'] || '[]')
+  };
+  next();
+};
+
 // Public Routes
-app.use("/api/users", userRoutes);
+app.use("/api/user", userRoutes);
 
 // Internal Routes
 app.use('/internal', internalRoutes);
@@ -62,7 +72,7 @@ async function startServer() {
     app.listen(PORT, () => {
       console.log(`✅ User Service running on http://localhost:${PORT}`);
       console.log(`📋 Available endpoints:
-        POST /api/users/register/initialize - Register new user
+        POST /api/user/register/initialize - Register new user
         GET /health - Health check`);
     });
   } catch (error) {
