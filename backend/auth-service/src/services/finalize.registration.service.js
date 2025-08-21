@@ -1,5 +1,5 @@
 import UserAuthRepository from "../repository/user.auth.repository.js";
-import { ExceptionFactory } from "shared";
+import ExceptionFactory from "../exceptions/exception.factory.js";
 import UserServiceClient from "../utils/user.service.client.js";
 import { cacheManager } from "../config/cache.manager.js";
 

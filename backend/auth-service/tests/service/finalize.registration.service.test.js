@@ -1,6 +1,6 @@
 import FinalizeRegistrationService from '../../src/services/finalize.registration.service.js';
 import UserAuthRepository from '../../src/repository/user.auth.repository.js';
-import { ExceptionFactory } from 'shared';
+import { ExceptionFactory } from '../../src/exceptions/exception.factory.js';
 import { cacheManager } from '../../src/config/cache.manager.js';
 
 jest.mock('../../src/repository/user.auth.repository.js');
