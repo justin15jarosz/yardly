@@ -7,8 +7,8 @@ class FinalizeRegistrationService {
   static async finalizeRegistration(email, otp, password) {
     const cacheKey = `otp_registration_${email}`;
     try {
-      const value = await cacheManager.get(cacheKey);
-      if (value === otp) {
+      const res = await cacheManager.get(cacheKey);
+      if (res.otp === otp) {
         try {
           const user = await UserServiceClient.getUserByEmail({ email });
           await UserAuthRepository.createUserCredentials(user.user_id, email, password);

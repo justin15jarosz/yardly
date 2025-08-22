@@ -4,7 +4,7 @@ import passwordController from '../../controllers/password.controller.js';
 const router = express.Router();
 
 router.post('/login', authController.login);
-router.post('/refresh', authController.refreshToken);
+router.post('/verify', authController.verifyToken);
 router.post('/logout', authController.logout);
 
 router.post('/forgot-password', passwordController.forgotPassword);

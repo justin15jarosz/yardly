@@ -1,0 +1,9 @@
+{
+  "name": "shared",
+  "version": "1.0.0",
+  "main": "auth0-middleware.js",
+  "dependencies": {
+    "jose": "^5.2.0",
+    "dotenv": "^16.4.5"
+  }
+}

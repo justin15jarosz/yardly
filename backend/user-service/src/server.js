@@ -18,6 +18,16 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const extractUserFromHeaders = (req, res, next) => {
+  req.gatewayUser = {
+    id: req.headers['x-user-id'],
+    email: req.headers['x-user-email'],
+    role: req.headers['x-user-role'],
+    permissions: JSON.parse(req.headers['x-user-permissions'] || '[]')
+  };
+  next();
+};
+
 // Public Routes
 app.use("/api/users", userRoutes);
 

@@ -1,6 +1,6 @@
 import { consumer } from "../config/kafka.js";
 import { sendOTPEmail } from "../sendEmail.js";
-import { cacheManager } from "../server.js";
+import { cacheManager } from "../config/cache.manager.js";
 import { generateOTP, generateOTPToken } from "./generateToken.js";
 
 // Kafka message consumer
