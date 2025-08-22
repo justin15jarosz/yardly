@@ -1,6 +1,6 @@
-const express = require('express');
-const { checkPermission, getUserPermissions } = require('../controllers/authzController');
-const { authenticateToken, authorizePermission, authorizeRole } = require('../middleware/authMiddleware');
+import express from 'express';
+import { checkPermission, getUserPermissions } from '../controller/authnz.controller.js';
+import { authenticateToken, authorizePermission, authorizeRole } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
@@ -43,4 +43,4 @@ router.delete('/delete-access',
   }
 );
 
-module.exports = router;
+export default router;

@@ -1,6 +1,6 @@
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 
-const authenticateToken = (req, res, next) => {
+export const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
@@ -23,7 +23,7 @@ const authenticateToken = (req, res, next) => {
   }
 };
 
-const authorizePermission = (requiredPermissions) => {
+export const authorizePermission = (requiredPermissions) => {
   return (req, res, next) => {
     const userPermissions = req.user.permissions || [];
     
@@ -43,7 +43,7 @@ const authorizePermission = (requiredPermissions) => {
   };
 };
 
-const authorizeRole = (requiredRoles) => {
+export const authorizeRole = (requiredRoles) => {
   return (req, res, next) => {
     if (!requiredRoles.includes(req.user.role)) {
       return res.status(403).json({
@@ -54,10 +54,4 @@ const authorizeRole = (requiredRoles) => {
 
     next();
   };
-};
-
-module.exports = {
-  authenticateToken,
-  authorizePermission,
-  authorizeRole
 };

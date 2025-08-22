@@ -1,7 +1,7 @@
-const rateLimit = require('express-rate-limit');
+import rateLimit from 'express-rate-limit';
 
 // Default rate limiting
-const defaultRateLimit = rateLimit({
+export const defaultRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
   message: {
@@ -13,7 +13,7 @@ const defaultRateLimit = rateLimit({
 });
 
 // Strict rate limiting for sensitive endpoints
-const strictRateLimit = rateLimit({
+export const strictRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // Limit each IP to 5 requests per windowMs
   message: {
@@ -23,7 +23,7 @@ const strictRateLimit = rateLimit({
 });
 
 // Create dynamic rate limiter
-const createRateLimit = (options) => {
+export const createRateLimit = (options) => {
   return rateLimit({
     windowMs: options.windowMs || 15 * 60 * 1000,
     max: options.max || 100,
@@ -33,5 +33,3 @@ const createRateLimit = (options) => {
     }
   });
 };
-
-module.exports = { defaultRateLimit, strictRateLimit, createRateLimit };

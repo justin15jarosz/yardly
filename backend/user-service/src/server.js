@@ -29,7 +29,7 @@ const extractUserFromHeaders = (req, res, next) => {
 };
 
 // Public Routes
-app.use("/api/user", userRoutes);
+app.use("/api/users", userRoutes);
 
 // Internal Routes
 app.use('/internal', internalRoutes);
@@ -72,7 +72,7 @@ async function startServer() {
     app.listen(PORT, () => {
       console.log(`✅ User Service running on http://localhost:${PORT}`);
       console.log(`📋 Available endpoints:
-        POST /api/user/register/initialize - Register new user
+        POST /api/users/register/initialize - Register new user
         GET /health - Health check`);
     });
   } catch (error) {

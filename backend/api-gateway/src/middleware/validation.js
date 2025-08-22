@@ -1,7 +1,7 @@
-const Joi = require('joi');
+import Joi from 'joi';
 
 // Request validation schemas
-const validationSchemas = {
+export const validationSchemas = {
   'POST /api/auth/login': Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().min(6).required()
@@ -21,7 +21,7 @@ const validationSchemas = {
   }).min(1)
 };
 
-const validateRequest = (req, res, next) => {
+export const validateRequest = (req, res, next) => {
   const routeKey = `${req.method} ${req.route?.path || req.path}`;
   const schema = validationSchemas[routeKey];
 
@@ -47,7 +47,7 @@ const validateRequest = (req, res, next) => {
 };
 
 // Query parameter validation
-const validateQueryParams = (req, res, next) => {
+export const validateQueryParams = (req, res, next) => {
   const commonQuerySchema = Joi.object({
     page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).max(100).default(20),
@@ -71,5 +71,3 @@ const validateQueryParams = (req, res, next) => {
   req.query = value;
   next();
 };
-
-module.exports = { validateRequest, validateQueryParams };

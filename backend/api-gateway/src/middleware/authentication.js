@@ -1,7 +1,7 @@
-const jwt = require('jsonwebtoken');
-const axios = require('axios');
+import jwt from 'jsonwebtoken';
+import axios from 'axios';
 
-const authenticateToken = async (req, res, next) => {
+export const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -44,5 +44,3 @@ const authenticateToken = async (req, res, next) => {
     });
   }
 };
-
-module.exports = { authenticateToken };

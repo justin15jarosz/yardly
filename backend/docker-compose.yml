@@ -77,14 +77,35 @@ services:
     networks:
       - microservices-network
 
+  api-gateway:
+    build: 
+      context: .
+      dockerfile: ./api-gateway/Dockerfile
+    container_name: api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - USER_SERVICE_URL=http://user-service:3001
+      - AUTH_SERVICE_URL=http://auth-service:3002
+      - AUTHNZ_SERVICE_URL=http://authnz-service:3003
+    volumes:
+      - ./api-gateway:/app
+      - /app/node_modules
+    networks:
+      - microservices-network
+    depends_on:
+      - auth-service
+      - authnz-service
+      - user-service
+
   # Microservices
   user-service:
     build:
       context: .
       dockerfile: ./user-service/Dockerfile
     container_name: user-service
-    ports:
-      - "3001:3001"
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres-db:5432/yardly
       - KAFKA_BROKERS=kafka-broker:9092
@@ -94,6 +115,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=yardly
+      - PORT=3001
     depends_on:
       postgres:
         condition: service_healthy
@@ -113,8 +135,6 @@ services:
       context: .
       dockerfile: ./auth-service/Dockerfile
     container_name: auth-service
-    ports:
-      - "3002:3002"
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres-db:5432/yardly
       - REDIS_URL=redis://redis-cache:6379
@@ -128,6 +148,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=yardly
+      - PORT=3002
     depends_on:
       postgres:
         condition: service_healthy
@@ -141,6 +162,20 @@ services:
     networks:
       - microservices-network
       - internal
+
+  authnz-service:
+    build: 
+      context: .
+      dockerfile: ./authnz-service/Dockerfile
+    container_name: authnz-service
+    environment:
+      - NODE_ENV=development
+      - PORT=3003
+    volumes:
+      - ./authnz-service:/app
+      - /app/node_modules
+    networks:
+      - microservices-network
 
   email-service:
     build:

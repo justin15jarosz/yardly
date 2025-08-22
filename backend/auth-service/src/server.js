@@ -21,11 +21,11 @@ app.use(morgan('dev'));
 
 // Rate limiting on auth endpoints
 app.use('/api/auth', rateLimiter);
-app.use('/api/user', rateLimiter);
+app.use('/api/users', rateLimiter);
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/user', registrationRoutes);
+app.use('/api/users', registrationRoutes);
 
 // 404 handler
 app.use("*", (req, res) => {

@@ -1,4 +1,4 @@
-const checkPermissions = (requiredPermissions = []) => {
+export const checkPermissions = (requiredPermissions = []) => {
   return (req, res, next) => {
     if (requiredPermissions.length === 0) {
       return next();
@@ -20,7 +20,7 @@ const checkPermissions = (requiredPermissions = []) => {
   };
 };
 
-const checkRoles = (requiredRoles = []) => {
+export const checkRoles = (requiredRoles = []) => {
   return (req, res, next) => {
     if (requiredRoles.length === 0) {
       return next();
@@ -38,7 +38,7 @@ const checkRoles = (requiredRoles = []) => {
   };
 };
 
-const checkOwnership = (req, res, next) => {
+export const checkOwnership = (req, res, next) => {
   const userId = req.params.id;
   const currentUserId = req.user?.id;
 
@@ -57,5 +57,3 @@ const checkOwnership = (req, res, next) => {
     message: 'Access denied. You can only access your own resources.'
   });
 };
-
-module.exports = { checkPermissions, checkRoles, checkOwnership };

@@ -1,4 +1,4 @@
-const checkPermission = (req, res) => {
+export const checkPermission = (req, res) => {
   try {
     const { permission } = req.params;
     const userPermissions = req.user.permissions || [];
@@ -25,7 +25,7 @@ const checkPermission = (req, res) => {
   }
 };
 
-const getUserPermissions = (req, res) => {
+export const getUserPermissions = (req, res) => {
   try {
     res.json({
       success: true,
@@ -44,9 +44,4 @@ const getUserPermissions = (req, res) => {
       message: 'Internal server error'
     });
   }
-};
-
-module.exports = {
-  checkPermission,
-  getUserPermissions
 };

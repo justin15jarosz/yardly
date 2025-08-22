@@ -1,10 +1,10 @@
-const express = require('express');
-const { routeConfig } = require('../config/services');
-const { authenticateToken } = require('../middleware/authentication');
-const { checkPermissions, checkRoles, checkOwnership } = require('../middleware/authorization');
-const { validateRequest, validateQueryParams } = require('../middleware/validation');
-const { createRateLimit } = require('../middleware/rateLimiting');
-const { createServiceProxy } = require('../middleware/proxy');
+import express from 'express';
+import { routeConfig } from '../config/services.js';
+import { authenticateToken } from '../middleware/authentication.js';
+import { checkPermissions, checkRoles, checkOwnership } from '../middleware/authorization.js';
+import { validateRequest, validateQueryParams } from '../middleware/validation.js';
+import { createRateLimit } from '../middleware/rate.limiting.js';
+import { createServiceProxy } from '../middleware/proxy.js';
 
 const router = express.Router();
 
@@ -55,24 +55,24 @@ const createRouteHandler = (method, path, config) => {
 Object.entries(routeConfig).forEach(([routeKey, config]) => {
   const [method, path] = routeKey.split(' ');
   const middlewares = createRouteHandler(method, path, config);
-  
+
   switch (method.toUpperCase()) {
     case 'GET':
-      router.get(path.replace('/api', ''), ...middlewares);
+      router.get(path, ...middlewares);
       break;
     case 'POST':
-      router.post(path.replace('/api', ''), ...middlewares);
+      router.post(path, ...middlewares);
       break;
     case 'PUT':
-      router.put(path.replace('/api', ''), ...middlewares);
+      router.put(path, ...middlewares);
       break;
     case 'PATCH':
-      router.patch(path.replace('/api', ''), ...middlewares);
+      router.patch(path, ...middlewares);
       break;
     case 'DELETE':
-      router.delete(path.replace('/api', ''), ...middlewares);
+      router.delete(path, ...middlewares);
       break;
   }
 });
 
-module.exports = router;
+export default router;

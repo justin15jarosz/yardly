@@ -1,7 +1,7 @@
-const axios = require('axios');
-const { services } = require('../config/services');
+import axios from 'axios';
+import { services } from '../config/services.js';
 
-const healthCheck = async (req, res) => {
+export const healthCheck = async (req, res) => {
   const serviceHealth = {};
   
   // Check each service
@@ -36,5 +36,3 @@ const healthCheck = async (req, res) => {
     services: serviceHealth
   });
 };
-
-module.exports = { healthCheck };
