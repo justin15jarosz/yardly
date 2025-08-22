@@ -12,9 +12,9 @@ This project is a web application with a Node.js/Express backend and a Next.js/R
 ### Backend
 
 1.  Navigate to the `backend` directory.
-2.  Install dependencies: `npm install`
-3.  Create a `.env` file from the `.env.example` and fill in your database credentials.
-4.  Start the development server: `npm run dev`
+2.  Update email-svc Environment Variables (Email & Password - For Email during registration)
+3.  Should have Docker Desktop running and run in terminal: `docker compose up --build`
+4.  Should now be able to access api via Postman
 
 ### Frontend
 
