@@ -1,5 +1,4 @@
 import express from 'express';
-import cors from 'cors';
 import authzRoutes from './routes/authnz.routes.js';
 import dotenv from "dotenv";
 
@@ -8,7 +7,6 @@ const app = express();
 const PORT = process.env.PORT || 3002;
 
 // Middleware
-app.use(cors());
 app.use(express.json());
 
 // Routes

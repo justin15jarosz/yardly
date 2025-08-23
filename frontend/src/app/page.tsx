@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { Star, CheckCircle, Users, MapPin, Calendar, Shield, ArrowRight } from 'lucide-react';
 
 
 const Home = () => {
-      const [userType, setUserType] = useState('homeowner');
   return (
        <div className="min-h-screen bg-white">      
       {/* Hero Section */}
@@ -31,7 +30,6 @@ const Home = () => {
                 </Link>
                 <Link // TODO: Have to send user type to register
                   href="\register"
-                  onClick={() => {setUserType('contractor');}}
                   className="border-2 border-green-600 text-green-600 px-8 py-4 rounded-full text-lg font-semibold hover:bg-green-600 hover:text-white transition-all"
                 >
                   Join as Pro
@@ -245,13 +243,13 @@ const Home = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-bold text-white mb-6">Ready to Transform Your Outdoor Space?</h2>
           <p className="text-xl text-green-100 mb-8">Join thousands of homeowners who found their perfect landscaping partner</p>
-          <button 
-            onClick={() => setCurrentView('register')}
+          <Link
+            href="/register"
             className="bg-white text-green-600 px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg inline-flex items-center"
           >
             Get Started Today
             <ArrowRight className="ml-2" size={20} />
-          </button>
+          </Link>
         </div>
       </section>
     </div>

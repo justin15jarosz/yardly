@@ -17,8 +17,28 @@ const PORT = process.env.PORT || 3000;
 
 // Security middleware
 app.use(helmet());
-app.use(cors());
 app.use(compression());
+
+// Allow multiple origins
+const allowedOrigins = [
+  "http://localhost:4000",         // local frontend dev
+  // "https://staging.myapp.com",     // staging frontend
+  // "https://myapp.com"              // prod frontend
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error("CORS not allowed for this origin"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"],
+  credentials: true,
+}));
 
 // Logging
 if (process.env.NODE_ENV !== 'test') {

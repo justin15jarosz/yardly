@@ -1,14 +1,18 @@
 import jwt from 'jsonwebtoken';
+import dotenv from "dotenv";
+
+dotenv.config();
 
 class TokenService {
   async generateToken(user) {
+    console.log("User: " + JSON.stringify(user));
     const payload = {
-      id: user.id,
+      id: user.user_id,
       email: user.email,
-      role: user.role,
-      permissions: user.permissions
+      // role: user.role, TODO: Uncomment when RBAC is implemented
+      // permissions: user.permissions
     };
-
+    console.log("Payload: " + JSON.stringify(payload));
     return jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRES_IN
     });

@@ -32,10 +32,9 @@ export const createServiceProxy = (serviceName) => {
       console.log(`➡️ Proxying ${req.method} ${req.originalUrl} → ${serviceName}`);
     },
     onProxyRes: (proxyRes) => {
-      // Optional: add CORS headers
-      proxyRes.headers['Access-Control-Allow-Origin'] = '*';
-      proxyRes.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,OPTIONS';
-      proxyRes.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Content-Length, X-Requested-With';
+      // strip CORS headers coming from microservice
+      delete proxyRes.headers['access-control-allow-origin'];
+      delete proxyRes.headers['access-control-allow-credentials'];
     },
     onError: (err, req, res) => {
       console.error(`❌ Proxy error for ${serviceName}:`, err.message);
