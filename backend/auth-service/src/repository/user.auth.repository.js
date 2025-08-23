@@ -47,7 +47,7 @@ class UserAuthRepository {
   static async findByEmail(email) {
     try {
       const query = `
-        SELECT user_id, password FROM credentials
+        SELECT user_id, email, password FROM credentials
         WHERE email = $1
       `;
       const result = await db.query(query, [email]);

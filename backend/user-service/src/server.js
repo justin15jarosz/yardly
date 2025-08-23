@@ -1,5 +1,4 @@
 import express from "express";
-import cors from "cors";
 import helmet from "helmet";
 import dotenv from "dotenv";
 import db from "./config/database.js";
@@ -14,7 +13,6 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(helmet());
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

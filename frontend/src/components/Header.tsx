@@ -1,7 +1,5 @@
 "use client";
 
-import { isLoggedIn, logout } from '@/utils/auth';
-import { Button } from './ui/button';
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import React, { useState } from 'react';

@@ -128,7 +128,6 @@ services:
       retries: 3
     networks:
       - microservices-network
-      - internal
 
   auth-service:
     build:
@@ -143,6 +142,8 @@ services:
       - JWT_ACCESS_SECRET=supersecretaccesstoken
       - JWT_REFRESH_SECRET=supersecretrefreshtoken
       - JWT_RESET_SECRET=supersecretresettoken
+      - JWT_SECRET=your_super_secret_jwt_key_here_make_it_long_and_random
+      - JWT_EXPIRES_IN=24h
       - POSTGRES_HOST=postgres-db
       - POSTGRES_PORT=5432
       - POSTGRES_USER=postgres
@@ -161,7 +162,6 @@ services:
       retries: 3
     networks:
       - microservices-network
-      - internal
 
   authnz-service:
     build: 
@@ -210,6 +210,4 @@ volumes:
 
 networks:
   microservices-network:
-    driver: bridge
-  internal:
     driver: bridge

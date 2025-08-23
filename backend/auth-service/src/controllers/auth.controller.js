@@ -9,7 +9,7 @@ class AuthController {
 
       const user = await AuthService.login(email, password);
 
-      const token = tokenService.generateAccessTokenenerateToken(user);
+      const token = await tokenService.generateToken(user);
       // const accessToken = await tokenService.generateAccessToken(user_id);
       // const refreshToken = await tokenService.generateRefreshToken(user_id);
 
