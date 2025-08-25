@@ -7,13 +7,11 @@ class AuthController {
     try {
       const { email, password } = req.body;
 
+      // Login
       const user = await AuthService.login(email, password);
 
+      // Generate JWT token
       const token = await tokenService.generateToken(user);
-      // const accessToken = await tokenService.generateAccessToken(user_id);
-      // const refreshToken = await tokenService.generateRefreshToken(user_id);
-
-      // await cacheManager.set(`refresh_${user_id}`, refreshToken, 'EX', 7 * 24 * 60 * 60); // 7 days
 
       res.json({
         success: true,

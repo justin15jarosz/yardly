@@ -4,7 +4,10 @@ class FinalizeRegistrationController {
       async finalizeRegistration(req, res) {
     try {
       const { email, otp, password } = req.body;
+
+      // Finalize registration
       await FinalizeRegistrationService.finalizeRegistration(email, otp, password);
+      
       res.status(201).json({ message: "User registration finalized" });
     } catch (error) {
       console.error("Error in finalizeRegistration:", error);

@@ -12,7 +12,7 @@ const kafka = new Kafka({
 
 // Topics configuration
 export const TOPICS = {
-  USER_REGISTRATIONS: "user-registrations",
+  RESET_PASSWORD: "reset-password",
 };
 
 // Create producer instance

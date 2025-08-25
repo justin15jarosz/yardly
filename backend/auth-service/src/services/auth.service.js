@@ -6,10 +6,14 @@ class AuthService {
 
     static async login(email, password) {
         try {
+            // Find user credentials
             const user = await UserAuthRepository.findByEmail(email);
+
+            // Validate passwords
             if (!user || !(await bcrypt.compare(password, user.password))) {
                 await ExceptionFactory.throwUnauthorized("Invalid credentials");
             }
+            
             return user;
         } catch (error) {
             console.error("Login error:", error);

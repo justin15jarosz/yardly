@@ -23,7 +23,7 @@ class UserAuthRepository {
   }
 
     // Update user password
-  static async updatePassword(email, password) {
+  static async updatePassword(credentialsId, password) {
     try {
       // Hash password
       const saltRounds = 12;
@@ -33,11 +33,11 @@ class UserAuthRepository {
         UPDATE credentials
         SET password = $1,
             updated_at = NOW()
-        WHERE email = $2
+        WHERE credentials_id = $2
         RETURNING credentials_id, email, created_at, updated_at
       `;
 
-      const result = await db.query(query, [hashedPassword, email]);
+      const result = await db.query(query, [hashedPassword, credentialsId]);
       return new UserCredentials(result.rows[0]);
     } catch (error) {
       throw error;
@@ -51,6 +51,19 @@ class UserAuthRepository {
         WHERE email = $1
       `;
       const result = await db.query(query, [email]);
+      return result.rows[0];
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async findByUserId(userId) {
+    try {
+      const query = `
+        SELECT credentials_id, user_id, password FROM credentials
+        WHERE user_id = $1
+      `;
+      const result = await db.query(query, [userId]);
       return result.rows[0];
     } catch (error) {
       throw error;
