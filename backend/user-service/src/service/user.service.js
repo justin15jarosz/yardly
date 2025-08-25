@@ -21,7 +21,7 @@ class UserService {
         name: user.name,
         purpose: "registration",
         timestamp: new Date().toISOString(),
-        websiteUrl: process.env.WEBSITE_URL || "http://localhost:3001",
+        websiteUrl: process.env.WEBSITE_URL || "http://localhost:4000",
       };
 
       // Publish to Kafka

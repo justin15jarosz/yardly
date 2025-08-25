@@ -13,6 +13,7 @@ const kafka = new Kafka({
 // Topics configuration
 const TOPICS = {
   USER_REGISTRATIONS: "user-registrations",
+  RESET_PASSWORD: "reset-password"
 };
 
 // Create consumer instance
@@ -26,7 +27,10 @@ export const consumer = kafka.consumer({
 export async function connectConsumer() {
   try {
     await consumer.connect();
-    await consumer.subscribe({ topic: TOPICS.USER_REGISTRATIONS });
+    const topicList = Object.values(TOPICS);
+    for (const topic of topicList) {
+      await consumer.subscribe({ topic, fromBeginning: true });
+    }
     console.log("✅ Kafka consumer connected and subscribed");
   } catch (error) {
     console.error("❌ Error connecting consumer:", error);

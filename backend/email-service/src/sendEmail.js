@@ -1,4 +1,5 @@
 import { transporter, emailConfig } from "./server.js";
+import { verifyEmailTemplate } from "./templates/verify.email.template.js";
 
 // Generate OTP email template
 function generateOTPEmail(name, otp, otpToken, websiteUrl) {

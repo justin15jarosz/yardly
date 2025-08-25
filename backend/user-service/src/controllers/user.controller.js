@@ -50,6 +50,10 @@ class UserController {
       }
     }
   }
+
+  async getAddresses(req, res) {
+    
+  }
 }
 
 export default new UserController();

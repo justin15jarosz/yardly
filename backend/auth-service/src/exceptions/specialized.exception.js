@@ -16,11 +16,10 @@ export class ValidationException extends BaseException {
  * Not Found Error - for resource not found scenarios
  */
 export class NotFoundException extends BaseException {
-    constructor(resource = 'Resource', id = null, additionalData = {}) {
-        const message = id ? `${resource} with ID '${id}' not found` : `${resource} not found`;
+    constructor(message, field = null, value = null, additionalData = {}) {
         super(message, 404, 'NOT_FOUND', {
-            resource,
-            id,
+            field,
+            value,
             ...additionalData
         });
     }

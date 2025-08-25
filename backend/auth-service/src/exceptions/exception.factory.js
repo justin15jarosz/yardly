@@ -1,9 +1,11 @@
-import { ValidationException,
+import {
+    ValidationException,
     NotFoundException,
     UnauthorizedException,
     ForbiddenException,
     ConflictException,
-    RateLimitException } from "./specialized.exception.js";
+    RateLimitException
+} from "./specialized.exception.js";
 /**
  * Factory class for creating and throwing exceptions
  */
@@ -42,8 +44,8 @@ class ExceptionFactory {
         throw new ValidationException(message, field, value, additionalData);
     }
 
-    static async throwNotFound(resource, id, additionalData) {
-        throw new NotFoundException(resource, id, additionalData);
+    static async throwNotFound(message, field, value, additionalData) {
+        throw new NotFoundException(message, field, value, additionalData);
     }
 
     static async throwUnauthorized(message, additionalData) {
