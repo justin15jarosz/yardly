@@ -19,7 +19,7 @@ class AuthController {
         data: {
           token,
           user: {
-            id: user.id,
+            id: user.user_id,
             email: user.email,
             role: user.role,
             permissions: user.permissions
